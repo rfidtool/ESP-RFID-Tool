@@ -155,10 +155,10 @@ You will need to manually reset the device upon the browser alerting you that th
 * Option 2: Bridge J3 before booting the device. (Either before powering on or bridge it and reset the device)   
 * Option 3: Connect via serial(9600 baud) and send the command "ResetDefaultConfig:" without quotes.  
   
-### History
+## History
 I pushed the design for the original prototype to GitHub back in September 11, 2016. I was using an Adafruit Feather Huzzah running some code that I had modified. At the time no sort of Wiegand logger existed offering WiFi capabilities and providing an easy to use web interface for accessing the log files.(I could not find one so I created it) During the second evolution of the project I decided to design dedicated hardware and I lightly upgraded the software. It was open source hardware and it was out there on GitHub but still not easily available to the masses. Not everyone is confident in surface mount soldering and even for me it was time consuming assembling boards for personal use. It was then that I realized there is a need for an affordable device like mine to be mass produced so anyone that needs one can have access to it. During the third stage I redesigned both the software and the hardware and decided to contact April Brother to see about manufacturing it and selling it for a fair price. That is when ESP-RFID-Tool was born.  
   
-### Licensing Information  
+## Licensing Information  
     
 Created by Corey Harding  
 https://github.com/rfidtool/ESP-RFID-Tool  
