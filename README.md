@@ -4,9 +4,8 @@ By Corey Harding
 Official website:  
 * www.rfid-tool.com  
 
-Hardware will be for sale soon through April Brother and the source code will be released at the same time.  
-Keep an eye out on Twitter for a release date:  
-* https://twitter.com/exploit_agency  
+Hardware is manufactured by April Brother and can be purchased online at their Tindie Store:  
+* https://www.tindie.com/products/aprbrother/esp-rfid-tool/ 
   
 ## Intended use cases  
 * Security researchers performing red team assessments.  
