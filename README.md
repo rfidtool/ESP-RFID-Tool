@@ -5,7 +5,10 @@ Official website:
 * www.rfid-tool.com  
 
 Hardware is manufactured by April Brother and can be purchased online at their Tindie Store:  
-* https://www.tindie.com/products/aprbrother/esp-rfid-tool/ 
+* https://www.tindie.com/products/aprbrother/esp-rfid-tool/  
+
+Video Demo:  
+* https://youtu.be/B86926CHImE  
   
 ## Intended use cases  
 * Security researchers performing red team assessments.  
