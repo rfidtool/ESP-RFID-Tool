@@ -852,6 +852,8 @@ void ViewLog(){
 // Start Networking
 void setup() {
   Serial.begin(9600);
+  Serial.println(F("....."));
+  Serial.println(String()+F("ESP-RFID-Tool v")+version);
   //SPIFFS.format();
   
   SPIFFS.begin();
