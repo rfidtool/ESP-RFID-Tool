@@ -1,6 +1,8 @@
 # ESP-RFID-Tool  
 By Corey Harding  
   
+![Logo](Images/logo.png?raw=true)  
+  
 Official website:  
 * www.rfid-tool.com  
 
