@@ -6,11 +6,13 @@ By Corey Harding
 Official website:  
 * www.rfid-tool.com  
 
-Hardware is manufactured by April Brother and can be purchased for $19.00 from their  
-* Tindie Store: https://www.tindie.com/products/aprbrother/esp-rfid-tool/  
-* eBay Store: https://www.ebay.com/itm/ESP-RFID-Tool-for-logging-Wiegand-data-/253354070711  
+Hardware is manufactured by April Brother and can be purchased for ~$19.00 from their  
+* Official Website: https://blog.aprbrother.com/product/esp-rfid-tool  
+* AliExpress Store: https://www.aliexpress.com/item/ESP-RFID-Tool/32850151497.html  
+* Tindie Store: https://www.tindie.com/products/aprbrother/esp-rfid-tool/  
+* eBay Store: https://www.ebay.com/itm/ESP-RFID-Tool-for-logging-Wiegand-data-/253354070711  
   
-Video Demo:  
+Video Demo:  
 * https://youtu.be/B86926CHImE  
   
 ## Intended use cases  
