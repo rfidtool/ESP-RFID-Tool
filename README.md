@@ -31,7 +31,7 @@ Video Demo:  
 A universal data logger that captures the raw binary data from a standard 5V Wiegand Interface. The device is capable of logging the credentials for access control systems or nearly any device that utilizes a Wiegand Interface such as RFID card readers, pin pads, magnetic stripe systems, and even some biometric readers. Wiegand Interfaces also do not have to be limited to just access control systems. The main target group for this device is 26-37bit HID cards.  For known card types both the binary and hexidecimal data is displayed directly in the log file for easy badge identification and also in case a clone of a card may be needed. For unknown card types only the raw binary data is shown.  
   
 ## How do you install it?  
-The device may be installed directly into an existing system drawing its power from the preexisting wiring or it can also be used to turn a reader into a standalone portable unit for data logging when a battery is added. Wiring is simple and consists of 4 wires, (+), (-), D0(Green), and D1(White). The device is capable of operating on voltages ranging from around 4.5V up to a maximum of 18V. Commonly found voltages are 12V and 5V.  
+The device may be installed directly into an existing system drawing its power from the preexisting wiring or it can also be used to turn a reader into a standalone portable unit for data logging when a battery is added. Wiring is simple and consists of 4 wires, (+), (-), D0(Green), and D1(White). The device is capable of operating on voltages ranging from around 4.5V up to a maximum of 18V. Commonly found voltages are 12V and 5V. **(See Installation Notes Below)  
   
 ## How do you access the logs?  
 Access to the log files and various settings is provided via a web based interface. The device has WiFi capabilities and can be set up to spawn its own access point or set to connect to an existing network. In the event you get locked out of the web interface you can bridge the J3 jumper on power up or while resetting the device to regain access without losing your log files.  
@@ -43,12 +43,14 @@ The hardware is based on an ESP12S WiFi chip with a full TCP/IP stack and Microc
 The device was made with minimal hardware to keep costs extremely low and in reach of hobbyist and also so security professionals can buy multiple units and also use them without the fear of losing a unit. This being said there are no level shifters on the board.(It is possible that in the future a PRO version may be released) This means that with the current hardware the device can work with a 3V3 Wiegand Interface as well as a 5V Wiegand interface because the hardware operates at 3V3 and is also 5V tolerant. The drawback of this is that not all 5V Wiegand controllers are guaranteed to be triggered when replaying or fuzzing data because only 3V3 is output from the device. There is also a risk when the device is in TX mode and the output goes low for 40uS, if the device were to also receive data during this time there will be a short. For this reason be sure that absoulutely no cards are being scanned while the device is in TX mode. The device does not go into TX mode until you press on a form submit button and as soon as the data is done being transmitted it goes back into listening mode. For the reasons above TX mode is for experimental use only and was designed primarily for easily debugging the software when making changes.(two units were tied together)  
 **Use transmit mode at your own risk, it is not officially supported. Consider it a bonus in the software.**  
   
-## Installation Notes 
+## **Installation Notes  
+[Click here for wiring diagrams](Installation-Schematics/README.md)  
 * Make sure the reader outputs data in the Wiegand format  
 * Connect D0 on device to D0 on reader  
 * Connect D1 on device to D1 on reader  
 * Connect + on device to + on reader  
 * Connect - on device to - on reader  
+  * The ESP-RFID-Tool accepts 4.5-18V but you must also be sure to supply enough voltage and current to power your reader if creating a standalone or portable unit.  
   * OPTIONAL: Connect 4.5-18V battery into the same + and -(only if building a portable unit, do not add a battery if implanting device into an existing installation, or if you do use a battery do not connect the + wire from the existing installation to your device, only tie in the GND -)  
   * NOTE: At a minimum D0, D1, and GND(-) must be connected to the reader for proper function, no matter the power source.  
 * Configure settings  
