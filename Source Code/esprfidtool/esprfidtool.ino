@@ -4,7 +4,7 @@
  * ESP-RFID-Tool Software is distributed under the MIT License. The license and copyright notice can not be removed and must be distributed alongside all future copies of the software.
  * MIT License
     
-    Copyright (c) [2017] [Corey Harding]
+    Copyright (c) [2018] [Corey Harding]
     
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal

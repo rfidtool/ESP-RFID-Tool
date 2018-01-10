@@ -114,7 +114,7 @@ ESP-RFID-Tool software is licensed under the MIT License<br>
 /*<br>
  MIT License<br>
 <br>
- Copyright (c) [2017] [Corey Harding]<br>
+ Copyright (c) [2018] [Corey Harding]<br>
 <br>
  Permission is hereby granted, free of charge, to any person obtaining a copy<br>
  of this software and associated documentation files (the "Software"), to deal<br>
