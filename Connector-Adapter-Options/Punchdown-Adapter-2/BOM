@@ -1,0 +1,24 @@
+Choose the wire gauge, purchase (2) of the "2 WAY" terminals and purchase the appropriate punch down tool.
+The combination of parts below are currently untested.
+
+Tool            Punch Down Tool                 Hand Tools ASSEMBLY BIT INSUL DIA 1.60; Mfr. #: 069176701602000 ; Mouser Part #: 581-069176701602000
+
+Choose your targets wiring size below.
+* I found that you can abuse a 20AWG connector to accept from 24-20AWG wire, an 18AWG connector would not skin 24AWG wire in my tests.
+  Research is still ongoing regarding an officially recommended connector.
+
+18AWG IDC Punch Down Block
+(D0),(D1)       IDC Terminal - 2 way            Desc.: 2 WAY WIRE TO BD 18 AWG STRANDED ; Mfr. #: 009176002001006; Mouser Part #: 581-009176002001006
+(+),(-)         IDC Terminal - 2 way            Desc.: 2 WAY WIRE TO BD 18 AWG STRANDED ; Mfr. #: 009176002001006; Mouser Part #: 581-009176002001006
+
+20AWG IDC Punch Down Block *
+(D0),(D1)       IDC Terminal - 2 way            Desc.: 2 WAY WIRE TO BD 20 AWG STRANDED ; Mfr. #: 009176002011006; Mouser Part #: 581-009176002011006
+(+),(-)         IDC Terminal - 2 way            Desc.: 2 WAY WIRE TO BD 20 AWG STRANDED ; Mfr. #: 009176002011006; Mouser Part #: 581-009176002011006
+
+22AWG IDC Punch Down
+(D0),(D1)       IDC Terminal - 2 way            Desc.: 2 WAY WIRE TO BD 22 AWG STRANDED; Mfr. #: 009176002022006; Mouser Part #: 581-009176002022006
+(+),(-)         IDC Terminal - 2 way            Desc.: 2 WAY WIRE TO BD 22 AWG STRANDED; Mfr. #: 009176002022006; Mouser Part #: 581-009176002022006
+
+24AWG IDC Punch Down
+(D0),(D1)       IDC Terminal - 2 way            Desc.: 2 WAY WIRE TO BD 24 AWG STRANDED; Mfr. #: 009176002032006; Mouser Part #: 581-009176002032006
+(+),(-)         IDC Terminal - 2 way            Desc.: 2 WAY WIRE TO BD 24 AWG STRANDED; Mfr. #: 009176002032006; Mouser Part #: 581-009176002032006
