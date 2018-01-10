@@ -45,6 +45,7 @@ The device was made with minimal hardware to keep costs extremely low and in rea
   
 ## **Installation Notes  
 [Click here for wiring diagrams](Installation-Schematics/README.md)  
+[Click here to see connector options](/Connector-Adapter-Options/README.md)  
 * Make sure the reader outputs data in the Wiegand format  
 * Connect D0 on device to D0 on reader  
 * Connect D1 on device to D1 on reader  
