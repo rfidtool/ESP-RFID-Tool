@@ -5,9 +5,10 @@ By Corey Harding
   
 Official website:  
 * www.rfid-tool.com  
-
+  
+![Board](Images/board.jpg?raw=true)  
 Hardware is manufactured by April Brother and can be purchased for ~$19.00 from their  
-* Official Website: https://blog.aprbrother.com/product/esp-rfid-tool  
+* Official Store: https://blog.aprbrother.com/product/esp-rfid-tool  
 * AliExpress Store: https://www.aliexpress.com/item/ESP-RFID-Tool/32850151497.html  
 * Tindie Store: https://www.tindie.com/products/aprbrother/esp-rfid-tool/  
 * eBay Store: https://www.ebay.com/itm/ESP-RFID-Tool-for-logging-Wiegand-data-/253354070711  
@@ -28,16 +29,12 @@ Video Demo:  
 * Simulating an access control system using multiple units of ESP-RFID-Tool.  
   
 ## What is it?  
-![Board](Images/board.jpg?raw=true)  
 A universal data logger that captures the raw binary data from a standard 5V Wiegand Interface. The device is capable of logging the credentials for access control systems or nearly any device that utilizes a Wiegand Interface such as RFID card readers, pin pads, magnetic stripe systems, and even some biometric readers. Wiegand Interfaces also do not have to be limited to just access control systems. The main target group for this device is 26-37bit HID cards.  For known card types both the binary and hexidecimal data is displayed directly in the log file for easy badge identification and also in case a clone of a card may be needed. For unknown card types only the raw binary data is shown.  
   
 ## How do you install it?  
-![ScrewDown](Connector-Adapter-Options/screwdown.jpg?raw=true)  
 The device may be installed directly into an existing system drawing its power from the preexisting wiring or it can also be used to turn a reader into a standalone portable unit for data logging when a battery is added. Wiring is simple and consists of 4 wires, (+), (-), D0(Green), and D1(White). The device is capable of operating on voltages ranging from around 4.5V up to a maximum of 18V. Commonly found voltages are 12V and 5V. **(See Installation Notes Below)  
   
 ## How do you access the logs?  
-![WebInt](Images/webint.png?raw=true)  
-##### NOTE: Current software version number may be greater than that pictured above.  
 Access to the log files and various settings is provided via a web based interface. The device has WiFi capabilities and can be set up to spawn its own access point or set to connect to an existing network. In the event you get locked out of the web interface you can bridge the J3 jumper on power up or while resetting the device to regain access without losing your log files.  
   
 ## I want to know a little more...
@@ -69,7 +66,6 @@ From Web Interface:
   
 Arduino IDE:  
 * Use the ESP Flasher R4 by April Brother:  
-![Programmer](Images/programmer.jpg?raw=true)  
   * https://blog.aprbrother.com/product/esp-flasher-r4  
 * Clone/download the source.  
 * Add these libraries:  
