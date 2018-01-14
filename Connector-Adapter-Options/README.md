@@ -3,17 +3,25 @@
 ### Standard Screwdown Connection  
 ![ScrewDown](screwdown.jpg?raw=true)  
   
+### Gray Wire Nuts 22-16AWG  
+  
+![Wire-Nuts](wirenuts.jpg?raw=true)  
+##### Note: For 24AWG you need to twist the wires and fold them over once to obtain a secure connection or use smaller wire nuts(They make a 24-18AWG which is perfect but color varies).  Gray Wire Nuts are common though and can be found in most hardware stores.  
+  
 ### Screwdown to T-Taps (Wire Splices)  
   
 #### T-Tap Example 1  
+![T-Tap1](tsplice1.jpg?raw=true)  
 * Uxcell T-Tap Male Insulated Wire Terminal Quick Connector Combo Set 10 Piece, Red  
   * by Uxcell  
 [$6.82 on Amazon](http://a.co/6joYNzS)  
+##### Note: These may require a light squeeze on the connector with pliers to cut past the insulation properly. Links are not suggested brands but simply examples.  
   
 #### T-Tap Example 2  
 * Brightfour Quick Wire Splice Connector-T type 1 Pin solderless- Compatible with 22 - 20 AWG Cable for Some Tight-fitting Automotive Uses  
   * by Brightfour  
 [$8.44 on Amazon](http://a.co/bAw7Fdw)  
+##### Note: These may require a light squeeze on the connector with pliers to cut past the insulation properly. Links are not suggested brands but simply examples.  
   
 ### Screwdown to Punchdown Adapter  
   
