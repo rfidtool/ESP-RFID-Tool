@@ -16,6 +16,12 @@ Hardware is manufactured by April Brother and can be purchased for ~$19.00 from 
 Video Demo:  
 * https://youtu.be/B86926CHImE  
   
+Firmware:  
+* Official  
+  * ESP-RFID-Tool: https://github.com/rfidtool/ESP-RFID-Tool/releases  
+* Unofficial  
+  * Port of Tastic RFID Thief: https://github.com/exploitagency/ESP-RFID-Thief/releases  
+  
 ## Intended use cases  
 * Security researchers performing red team assessments.  
   * Capturing card values to later be cloned.  
