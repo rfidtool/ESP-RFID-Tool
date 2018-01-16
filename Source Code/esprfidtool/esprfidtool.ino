@@ -1,6 +1,6 @@
 /*
  * ESP-RFID-Tool
- * Ported to the ESP12S by Corey Harding of www.Exploit.Agency / www.LegacySecurityGroup.com
+ * by Corey Harding of www.Exploit.Agency / www.LegacySecurityGroup.com
  * ESP-RFID-Tool Software is distributed under the MIT License. The license and copyright notice can not be removed and must be distributed alongside all future copies of the software.
  * MIT License
     
