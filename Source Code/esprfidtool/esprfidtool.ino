@@ -1051,6 +1051,28 @@ void setup() {
       binALT="";
     }
 
+    if (server.arg("pushType")=="Ground") {
+      Serial.end();
+      digitalWrite(3,LOW);
+      pinMode(3,OUTPUT);
+      delay(server.arg("pushTime").toInt());
+      pinMode(3,INPUT);
+      Serial.begin(9600);
+
+      experimentalStatus=String()+"Grounding \"Push to Open\" wire for "+(server.arg("pushTime").toInt())+"ms.";
+    }
+
+    if (server.arg("pushType")=="High") {
+      Serial.end();
+      digitalWrite(3,HIGH);
+      pinMode(3,OUTPUT);
+      delay(server.arg("pushTime").toInt());
+      pinMode(3,INPUT);
+      Serial.begin(9600);
+
+      experimentalStatus=String()+"Outputting 3.3V on \"Push to Open\" wire for "+(server.arg("pushTime").toInt())+"ms.";
+    }
+
     server.send(200, "text/html", 
       String()+
       F(
@@ -1089,6 +1111,23 @@ void setup() {
       "<INPUT form=\"fuzz\" type=\"radio\" name=\"fuzzType\" id=\"alternating\" value=\"alternating\"> <small>Transmit X bits alternating between D0 and D1 each bit (01010101,etc)</small><br>"
       "<INPUT form=\"fuzz\" type=\"submit\" value=\"Fuzz\"><br>"
       "</FORM>"
+      "<br>"
+      "<hr>"
+      "<br>"
+      "<b>Push Button for Door Open:</b><br>"
+      "<small>Connect \"Push to Open\" wire from the reader to the RX pin(GPIO3) on the programming header on ESP-RFID-Tool.</small><br>"
+      "<small>Warning! Selecting the wrong trigger signal type may cause damage to the connected reader.</small><br><br>"
+      "<FORM action=\"/experimental\" id=\"push\" method=\"post\">"
+      "<b>Time in ms to push the door open button:</b>"
+      "<INPUT form=\"push\" type=\"text\" name=\"pushTime\" value=\"50\" pattern=\"^[1-9]+[0-9]*$\" required title=\"Must be a number > 0, must not be empty\" minlength=\"1\" size=\"32\"><br>"
+      "<b>Does the wire expect a High or Low signal to open the door:</b>"
+      "<INPUT form=\"push\" type=\"radio\" name=\"pushType\" id=\"Ground\" value=\"Ground\" checked required> <small>Low Signal[Ground]</small>   "
+      "<INPUT form=\"push\" type=\"radio\" name=\"pushType\" id=\"Ground\" value=\"High\" required> <small>High Signal[3.3V]</small><br>"
+      "<INPUT form=\"push\" type=\"submit\" value=\"Push\"><br>"
+      "</FORM>"
+      "<br>"
+      "<hr>"
+      "<br>"
       "</P>"
       "</body>"
       "</html>"
