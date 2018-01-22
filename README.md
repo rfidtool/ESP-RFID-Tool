@@ -13,7 +13,8 @@ Hardware is manufactured by April Brother and can be purchased for ~$19.00 from 
 * Tindie Store: https://www.tindie.com/products/aprbrother/esp-rfid-tool/  
 * eBay Store: https://www.ebay.com/itm/ESP-RFID-Tool-for-logging-Wiegand-data-/253354070711  
   
-Video Demo:  
+Video Demos:  
+* https://youtu.be/0o8r_ufRrFo  
 * https://youtu.be/B86926CHImE  
   
 Firmware:  
