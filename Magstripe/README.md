@@ -1,3 +1,5 @@
+## ABA Encoding  
+  
 Magstripe Reader Tested: HID 3110-6445 Magstripe Pass-Through Reader  
  * set to rotary position B (Raw Data - All Bits Wiegand)  
   
