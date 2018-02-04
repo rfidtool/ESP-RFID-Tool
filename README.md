@@ -14,8 +14,8 @@ Hardware is manufactured by April Brother and can be purchased for ~$19.00 from 
 * eBay Store: https://www.ebay.com/itm/ESP-RFID-Tool-for-logging-Wiegand-data-/253354070711  
   
 Video Demos:  
-* https://youtu.be/0o8r_ufRrFo  
-* https://youtu.be/B86926CHImE  
+* Biometric/Keypad: https://youtu.be/0o8r_ufRrFo  
+* Portable RFID Reader: https://youtu.be/B86926CHImE  
   
 Firmware:  
 * Official  
@@ -36,7 +36,7 @@ Firmware:  
 * Simulating an access control system using multiple units of ESP-RFID-Tool.  
   
 ## What is it?  
-A universal data logger that captures the raw binary data from a standard 5V Wiegand Interface. The device is capable of logging the credentials for access control systems or nearly any device that utilizes a Wiegand Interface such as RFID card readers, pin pads, magnetic stripe systems, and even some biometric readers. Wiegand Interfaces also do not have to be limited to just access control systems. The main target group for this device is 26-37bit HID cards.  For known card types both the binary and hexidecimal data is displayed directly in the log file for easy badge identification and also in case a clone of a card may be needed. For unknown card types only the raw binary data is shown.  
+A universal data logger that captures the raw binary data from a standard 5V Wiegand Interface. The device is capable of logging the credentials for access control systems or nearly any device that utilizes a Wiegand Interface such as RFID card readers, pin pads, magnetic stripe systems, barcode, and even some biometric readers. Wiegand Interfaces also do not have to be limited to just access control systems. The main target group for this device is 26-37bit HID cards.  For known card types both the binary and hexidecimal data is displayed directly in the log file for easy badge identification and also in case a clone of a card may be needed. For unknown card types only the raw binary data is shown.  
   
 ## How do you install it?  
 The device may be installed directly into an existing system drawing its power from the preexisting wiring or it can also be used to turn a reader into a standalone portable unit for data logging when a battery is added. Wiring is simple and consists of 4 wires, (+), (-), D0(Green), and D1(White). The device is capable of operating on voltages ranging from around 4.5V up to a maximum of 18V. Commonly found voltages are 12V and 5V. **(See Installation Notes Below)  
@@ -64,6 +64,10 @@ The device was made with minimal hardware to keep costs extremely low and in rea
   * NOTE: At a minimum D0, D1, and GND(-) must be connected to the reader for proper function, no matter the power source.  
 * Configure settings  
   * See Below  
+  
+## Making Sense of the Binary Data  
+[Keypads](Keypad/README.md)  
+[Magstripe](Magstripe/README.md)  
   
 ## Flashing Firmware  
 From Web Interface:  
