@@ -17,14 +17,14 @@ Count # of set bits(1's) in column
 EVEN = 0  
 ODD  = 1  
   
-Track 2 Debit/Credit Card Format(for example):  
+Track 2 Debit/Credit Card Format(for example, as I could not find actual magstripe access control cards):  
 ;1234567890123456=YYMMSSSDDDDDDDDDDDDDD?*  
 ; = Start Sentinel  
 1234567890123456 = 16 Digit Card #  
 = = End Card #  
 YY = Expiration Year  
 MM = Expiration Month  
-SSS = Service Code (As Understood From Wikipedia: "201" means chip required, "101" means no chip, be sure to recalculate the LRC if changing, it is not advised to experimental here without knowing the laws involved)  
+SSS = Service Code (As Understood From Wikipedia: "201" means chip required, "101" means no chip, be sure to recalculate the LRC if changing, it is not advised to experiment here without knowing the laws involved)  
 DDDDDDDDDDDDDD = Discretionary Data  
 ? = End Sentinel  
 *=LRC  
