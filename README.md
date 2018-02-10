@@ -28,7 +28,7 @@ Firmware:  
   * Capturing card values to later be cloned.  
   * Replaying raw binary captures.*(see note below)  
   * Fuzzing access control systems.*(see note below)  
-* To create a standalone device for testing badges and or card readers without the need for a Wiegand Controller.  
+* To create a standalone device for capturing credentials or testing badges and or card readers without the need for a Wiegand Controller.  
   * Add a battery and a card reader to make the unit portable.  
   * Add a benchtop power supply to use for testing hardware.  
 * Installers troubleshooting issues with a card reader or the data lines out in the field or back in the office.  
