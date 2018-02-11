@@ -13,11 +13,11 @@ Hardware is manufactured by April Brother and can be purchased for ~$19.00 from 
 * Tindie Store: https://www.tindie.com/products/aprbrother/esp-rfid-tool/  
 * eBay Store: https://www.ebay.com/itm/ESP-RFID-Tool-for-logging-Wiegand-data/253417849827  
   
-Video Demos:  
-* HID multiCLASS RM40 RFID/Magstripe Reader: https://youtu.be/2sCLkpuxAks  
+Video Demos of Capturing Credentials using various technologies that utilize a Wiegand Interface:  
+* Portable HID 5375 Long Range RFID Reader: https://youtu.be/B86926CHImE  
 * HID 5355 RFID/Keypad Reader: https://youtu.be/ojIpcY8Y3KQ  
-* RFID/Biometric/Keypad: https://youtu.be/0o8r_ufRrFo  
-* Portable HID 5375 RFID Reader: https://youtu.be/B86926CHImE  
+* HID multiCLASS RM40 RFID/Magstripe Reader: https://youtu.be/2sCLkpuxAks  
+* RFID/Biometric/Keypad with Electronic Deadbolt: https://youtu.be/0o8r_ufRrFo  
   
 Firmware:  
 * Official  
@@ -33,7 +33,8 @@ Firmware:  
 * To create a standalone device for capturing credentials or testing badges and or card readers without the need for a Wiegand Controller.  
   * Add a battery and a card reader to make the unit portable.  
   * Add a benchtop power supply to use for testing hardware.  
-* Installers troubleshooting issues with a card reader or the data lines out in the field or back in the office.  
+* Installers troubleshooting issues with a card reader, the data lines, or even testing for a faulty card.  
+* Useful for merchants or surplus resellers who are testing if access control equipment is functional.  
 * Hobbyist experimenting with various systems that utilize a Wiegand Interface.  
 * Simulating an access control system using multiple units of ESP-RFID-Tool.  
   
