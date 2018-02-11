@@ -369,7 +369,7 @@ void LogWiegand(WiegandNG tempwg) {
 
   File f = SPIFFS.open("/"+String(logname), "a"); //Open the log in append mode to store capture
   int preambleLen;
-  if (unknown==true) {
+  if (unknown==true && countedBits!=4) {
     f.print(F("Unknown "));
     preambleLen=0;
   }
@@ -378,6 +378,10 @@ void LogWiegand(WiegandNG tempwg) {
   }
   
   f.print(String()+countedBits+F(" bit card,"));
+
+  if (countedBits==4) {
+    f.print(F("possible keypad entry,"));
+  }
 
   if (unknown!=true) {
     f.print(String()+preambleLen+F(" bit preamble,"));
@@ -457,6 +461,48 @@ void LogWiegand(WiegandNG tempwg) {
     }
     //f.print(" "); //debug line
     f.println(cardChunk2, HEX);
+  }
+  else if (countedBits==4) {
+    f.print(",Keypad Code:");
+    if (binChunk1 == 0B0000) {
+      f.println("0");
+    }
+    else if (binChunk1 == 0B0001) {
+      f.println("1");
+    }
+    else if (binChunk1 == 0B0010) {
+      f.println("2");
+    }
+    else if (binChunk1 == 0B0011) {
+      f.println("3");
+    }
+    else if (binChunk1 == 0B0100) {
+      f.println("4");
+    }
+    else if (binChunk1 == 0B0101) {
+      f.println("5");
+    }
+    else if (binChunk1 == 0B0110) {
+      f.println("6");
+    }
+    else if (binChunk1 == 0B0111) {
+      f.println("7");
+    }
+    else if (binChunk1 == 0B1000) {
+      f.println("8");
+    }
+    else if (binChunk1 == 0B1001) {
+      f.println("9");
+    }
+    else if (binChunk1 == 0B1010) {
+      f.println("*");
+    }
+    else if (binChunk1 == 0B1011) {
+      f.println("#");
+    }
+    else {
+      f.println("?");
+    }
   }
   else {
     f.println("");
