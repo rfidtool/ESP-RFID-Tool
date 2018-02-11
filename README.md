@@ -14,8 +14,10 @@ Hardware is manufactured by April Brother and can be purchased for ~$19.00 from 
 * eBay Store: https://www.ebay.com/itm/ESP-RFID-Tool-for-logging-Wiegand-data/253417849827  
   
 Video Demos:  
+* HID multiCLASS RM40 RFID/Magstripe Reader: https://youtu.be/2sCLkpuxAks  
+* HID 5355 RFID/Keypad Reader: https://youtu.be/ojIpcY8Y3KQ  
 * RFID/Biometric/Keypad: https://youtu.be/0o8r_ufRrFo  
-* Portable RFID Reader: https://youtu.be/B86926CHImE  
+* Portable HID 5375 RFID Reader: https://youtu.be/B86926CHImE  
   
 Firmware:  
 * Official  
