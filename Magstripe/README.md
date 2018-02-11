@@ -8,7 +8,7 @@ RFID-Tool Specific Settings
   
 See [aba-decode.php](aba-decode.php) script for converting binary card data to ascii (Script by: AndrewMohawk)  
  * Command Line: /usr/bin/php aba-decode.php 1101000001100000100011001001001010101101111000001010011101101111100010  
- * Web:          https://www.LegacySecurityGroup.com/aba-decode.php?binary=1101000001100000100011001001001010101101111000001010011101101111100010  
+ * Web:          https://www.LegacySecurityGroup.com/aba-decode.php  
   
 Binary:  
 5 bits  
