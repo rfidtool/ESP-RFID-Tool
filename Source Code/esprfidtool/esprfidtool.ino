@@ -369,7 +369,7 @@ void LogWiegand(WiegandNG tempwg) {
 
   File f = SPIFFS.open("/"+String(logname), "a"); //Open the log in append mode to store capture
   int preambleLen;
-  if (unknown==true && countedBits!=4) {
+  if (unknown==true && countedBits!=4 && countedBits!=248) {
     f.print(F("Unknown "));
     preambleLen=0;
   }
@@ -382,6 +382,11 @@ void LogWiegand(WiegandNG tempwg) {
   if (countedBits==4) {
     f.print(F("possible keypad entry,"));
   }
+
+  if (countedBits==248) {
+    f.print(F("possible magstripe card,"));
+  }
+  String magstripe="";
 
   if (unknown!=true) {
     f.print(String()+preambleLen+F(" bit preamble,"));
@@ -420,6 +425,9 @@ void LogWiegand(WiegandNG tempwg) {
     }
     for(i; i--;) {
       f.print(bitRead(binChunk1, i));
+      if (countedBits==248) {
+        magstripe=magstripe+bitRead(binChunk1, i);
+      }
       if(i == 0){
         break;
       }
@@ -444,6 +452,9 @@ void LogWiegand(WiegandNG tempwg) {
     }
     for(i; i--;) {
       f.print(bitRead(binChunk2, i));
+      if (countedBits==248) {
+        magstripe=magstripe+bitRead(binChunk2, i);
+      }
       if(i == 0){
         break;
       }
@@ -452,6 +463,9 @@ void LogWiegand(WiegandNG tempwg) {
 
   if (countedBits>52) {
     f.print(binChunk3);
+    if (countedBits==248) {
+        magstripe=magstripe+binChunk3;
+    }
   }
 
   if (countedBits<=52 && unknown!=true) {
@@ -506,6 +520,10 @@ void LogWiegand(WiegandNG tempwg) {
   }
   else {
     f.println("");
+  }
+
+  if (countedBits==248) {
+    f.println(String()+F(" * Possible magstripe read detected above. Open the following URL in an Internet connected web browser to attempt to convert to ascii: <a target=\"_blank\" href=\"https://www.legacysecuritygroup.com/aba-decode.php?binary=")+magstripe+F("\">https://www.legacysecuritygroup.com/aba-decode.php?binary=")+magstripe+F("</a>"));
   }
 
 //Debug
@@ -709,7 +727,7 @@ bool loadDefaults() {
   json["ftpenabled"] = "0";
   json["ledenabled"] = "1";
   json["logname"] = "log.txt";
-  json["bufferlength"] = "52";
+  json["bufferlength"] = "256";
   File configFile = SPIFFS.open("/esprfidtool.json", "w");
   json.printTo(configFile);
   loadConfig();
