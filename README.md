@@ -14,7 +14,7 @@ Hardware is manufactured by April Brother and can be purchased for ~$19.00 from 
 * eBay Store: https://www.ebay.com/itm/ESP-RFID-Tool-for-logging-Wiegand-data/253417849827  
   
 Video Demos:  
-* Biometric/Keypad: https://youtu.be/0o8r_ufRrFo  
+* RFID/Biometric/Keypad: https://youtu.be/0o8r_ufRrFo  
 * Portable RFID Reader: https://youtu.be/B86926CHImE  
   
 Firmware:  
