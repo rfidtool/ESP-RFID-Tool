@@ -1,7 +1,10 @@
 ## ABA Encoding  
   
-Magstripe Reader Tested: HID 3110-6445 Magstripe Pass-Through Reader  
- * set to rotary position B (Raw Data - All Bits Wiegand)  
+Wiegand Magstripe Readers Tested:  
+* HID 3110-6445 Magstripe Pass-Through Reader  
+  * set to rotary position B (Raw Data - All Bits Wiegand)  
+* HID multiCLASS RM40 iCLASS/Magstripe Reader 6220CKN000B  
+  * purchase a reader with the last digit B in item # (ex: 6220CKN000**B**)  
   
 RFID-Tool Specific Settings  
  * set buffer size to 256 bits or greater  
