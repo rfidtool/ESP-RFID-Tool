@@ -1,22 +1,49 @@
 <?php
-header("Content-type: text/plain");
 
-echo "Original script by: AndrewMohawk\n";
-// andrew@andrewmohawk.com
-echo "http://www.andrewmohawk.com\n\n";
-
-echo "Modified slightly by: Corey Harding\n";
-echo "www.LegacySecurityGroup.com / www.Exploit.Agency\n\n";
-
-//USAGE:
-//Command Line: /usr/bin/php aba-decode.php 1101000001100000100011001001001010101101111000001010011101101111100010
-//Web:          www.server.com/aba-decode.php?binary=1101000001100000100011001001001010101101111000001010011101101111100010
+/*
+USAGE:
+Command Line: /usr/bin/php aba-decode.php 1101000001100000100011001001001010101101111000001010011101101111100010
+Web:          www.LegacySecurityGroup.com/aba-decode.php?binary=1101000001100000100011001001001010101101111000001010011101101111100010
+*/
 
 /* Decode Track 2 data from binary */
 if (defined('STDIN')) {
   $binary = $argv[1];
-} else { 
-  $binary = $_GET['binary'];
+  define( "LINEBREAK", PHP_EOL);
+} else {
+  if(isset($_POST['submit'])) {
+    $binary = $_POST["binary"];
+  }
+  else {
+    $binary = $_GET['binary'];
+  }
+  define( "LINEBREAK", "<br>");
+}
+if (empty($binary)) {
+  $binary = "1101000001100000100011001001001010101101111000001010011101101111100010";
+}
+
+echo "https://github.com/rfidtool/ESP-RFID-Tool/blob/master/Magstripe/aba-decode.php" . LINEBREAK;
+echo "For converting Track 2 Magstripe ABA Binary data to ASCII" . LINEBREAK . LINEBREAK;
+
+echo "Original script by: AndrewMohawk" . LINEBREAK;
+// andrew@andrewmohawk.com
+echo "http://www.andrewmohawk.com" . LINEBREAK . LINEBREAK;
+
+echo "Modified slightly by: Corey Harding" . LINEBREAK;
+echo "www.LegacySecurityGroup.com / www.Exploit.Agency" . LINEBREAK . LINEBREAK;
+
+if (!defined('STDIN')) {
+?>
+<html>
+<body>
+<form action="<?php basename(__FILE__, '.php'); ?>" method="post">
+    <input type='text' name="binary" value="<?php echo $binary; ?>" />
+    <input type="submit" name="submit" value="Submit" />
+</form>
+</body>
+</html>
+<?php
 }
 
 // this function by mtroy dot student at gmail dot com taken from http://php.net/manual/en/function.strpos.php
@@ -42,7 +69,7 @@ function processBinary($binary)
 	$start_sentinel = strpos($binary,"11010");
 	if($start_sentinel === false)
 	{
-		echo "Could not find start sentinel\n";
+		echo "Could not find start sentinel" . LINEBREAK;
 		return false;
 	}
 	
@@ -51,7 +78,7 @@ function processBinary($binary)
 	$end_sentinel = strrpos($binary,"11111");
 	if(count($end_sentinel) == 0)
 	{
-		echo "Could not find end sentinel\n";
+		echo "Could not find end sentinel" . LINEBREAK;
 		return false;
 	}
 	
@@ -101,7 +128,7 @@ function processBinary($binary)
 				echo " __ Parity: Valid";
 			}
 			$AsciiOutput .= $asciiChar;
-			echo "\n";
+			echo LINEBREAK;
 			$currentBits = "";
 			$currentNum = 0;
 			
@@ -109,13 +136,14 @@ function processBinary($binary)
 		
 		
 	}
-	echo "\n\nTotal Out (ascii): $AsciiOutput\n";
+	echo  LINEBREAK . LINEBREAK . "Total Out (ascii): $AsciiOutput" . LINEBREAK;
 }
-echo "Trying One way:\n\n";
+echo "Decoding " . $binary . LINEBREAK . LINEBREAK;
+echo "Trying One way:" . LINEBREAK . LINEBREAK;
 if (processBinary($binary) == false)
 {
 	//reverse.
-	echo "\n\n";
-	echo "Trying The Reverse:\n\n";
+	echo  LINEBREAK . LINEBREAK;
+	echo "Trying The Reverse:" . LINEBREAK . LINEBREAK;
 	processBinary(strrev($binary));
 }
