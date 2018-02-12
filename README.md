@@ -16,7 +16,8 @@ Hardware is manufactured by April Brother and can be purchased for ~$19.00 from 
 Video Demos of Capturing Credentials using various technologies that utilize a Wiegand Interface:  
 * Portable HID 5375 Long Range RFID Reader: https://youtu.be/B86926CHImE  
 * HID 5355 RFID/Keypad Reader: https://youtu.be/ojIpcY8Y3KQ  
-* HID multiCLASS RM40 RFID/Magstripe Reader: https://youtu.be/2sCLkpuxAks  
+* HID multiCLASS RM40 RFID/Magstripe Reader: https://youtu.be/9OccRaLxXg8  
+* HID multiCLASS RFID Reader: https://youtu.be/2sCLkpuxAks  
 * RFID/Biometric/Keypad with Electronic Deadbolt: https://youtu.be/0o8r_ufRrFo  
   
 Firmware:  
