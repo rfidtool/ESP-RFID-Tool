@@ -26,6 +26,7 @@
 #include "HelpText.h"
 #include "License.h"
 #include "version.h"
+#include "strrev.h"
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
@@ -426,7 +427,7 @@ void LogWiegand(WiegandNG tempwg) {
     for(i; i--;) {
       f.print(bitRead(binChunk1, i));
       if (countedBits==248) {
-        magstripe=magstripe+bitRead(binChunk1, i);
+        magstripe+=bitRead(binChunk1, i);
       }
       if(i == 0){
         break;
@@ -453,7 +454,7 @@ void LogWiegand(WiegandNG tempwg) {
     for(i; i--;) {
       f.print(bitRead(binChunk2, i));
       if (countedBits==248) {
-        magstripe=magstripe+bitRead(binChunk2, i);
+        magstripe+=bitRead(binChunk2, i);
       }
       if(i == 0){
         break;
@@ -464,7 +465,7 @@ void LogWiegand(WiegandNG tempwg) {
   if (countedBits>52) {
     f.print(binChunk3);
     if (countedBits==248) {
-        magstripe=magstripe+binChunk3;
+        magstripe+=binChunk3;
     }
   }
 
@@ -523,7 +524,57 @@ void LogWiegand(WiegandNG tempwg) {
   }
 
   if (countedBits==248) {
-    f.println(String()+F(" * Possible magstripe read detected above. Open the following URL in an Internet connected web browser to attempt to convert to ascii: <a target=\"_blank\" href=\"https://www.legacysecuritygroup.com/aba-decode.php?binary=")+magstripe+F("\">https://www.legacysecuritygroup.com/aba-decode.php?binary=")+magstripe+F("</a>"));
+
+    int startSentinel=magstripe.indexOf("11010");
+    int endSentinel=(magstripe.lastIndexOf("11111")+4);
+    int magStart=0;
+    int magEnd=1;
+    if (endSentinel>startSentinel) {
+      f.print(" * \"Forward\" Swipe Detected,");
+      //f.println(String()+"Normal: "+magstripe);
+      magStart=startSentinel;
+      magEnd=endSentinel;
+    }
+    else if (endSentinel<startSentinel){
+      f.print(" * \"Reverse\" Swipe Detected,");
+      char magchar[249];
+      magstripe.toCharArray(magchar,249);
+      magstripe=String(strrev(magchar));
+      //f.println(String()+"Reverse: "+magstripe);
+      magStart=magstripe.indexOf("11010");
+      magEnd=(magstripe.lastIndexOf("11111")+4);
+    }
+    //f.println(String()+"Start pos:"+magStart);
+    //f.println(String()+"Start pos:"+magEnd);
+    String ABA="";
+    int magCount=abs(magEnd-magStart);
+    //f.println(String()+"magCount:"+magCount);
+    f.println(String()+"\"Cleaned\" Binary:"+magstripe.substring(magStart,magEnd));
+    f.print(" * Possible Card Data\(ASCII\):<b>");
+    while (magCount>0) {
+      ABA=magstripe.substring(magStart,magStart+4);
+      if (ABA=="1101") {f.print(";");}
+      else if (ABA=="0000") {f.print("0");}
+      else if (ABA=="1000") {f.print("1");}
+      else if (ABA=="0100") {f.print("2");}
+      else if (ABA=="1100") {f.print("3");}
+      else if (ABA=="0010") {f.print("4");}
+      else if (ABA=="1010") {f.print("5");}
+      else if (ABA=="0110") {f.print("6");}
+      else if (ABA=="1110") {f.print("7");}
+      else if (ABA=="0001") {f.print("8");}
+      else if (ABA=="1001") {f.print("9");}
+      else if (ABA=="0011") {f.print("<");}
+      else if (ABA=="0111") {f.print(">");}
+      else if (ABA=="0101") {f.print(":");}
+      else if (ABA=="1011") {f.print("=");}
+      else if (ABA=="1111") {f.print("?");}
+      else {f.print("_UNKNOWN-CHARACTER_");}
+      magStart=magStart+5;
+      magCount=magCount-5;
+    }
+    f.println("</b>");
+    f.println(String()+F(" * You can verify the data at the following URL: <a target=\"_blank\" href=\"https://www.legacysecuritygroup.com/aba-decode.php?binary=")+magstripe+F("\">https://www.legacysecuritygroup.com/aba-decode.php?binary=")+magstripe+F("</a>"));
   }
 
 //Debug

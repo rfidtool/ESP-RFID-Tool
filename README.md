@@ -210,3 +210,11 @@ ESP-RFID-Tool software is licensed under the MIT License
 ##### Wiegand Preamble Calculator Code  
 * No License Specified  
   * Fran Brown of Bishop Fox  
+  
+##### strrev.h  
+* Custom License(see file)  
+  * Copyright (c) 2007 Dmitry Xmelkov  
+  
+##### aba-decode.py  
+* No License Specified  
+  * Andrew MacPherson(andrewmohawk)  
