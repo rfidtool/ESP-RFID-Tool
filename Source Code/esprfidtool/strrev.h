@@ -32,10 +32,10 @@ char * strrev (char *s)
     for (p2 = s; *p2; ) p2++;
     p1 = s;
     while (p1 < p2) {
-  char c1 = *p1;
-  char c2 = *--p2;
-  *p1++ = c2;
-  *p2 = c1;
+      char c1 = *p1;
+      char c2 = *--p2;
+      *p1++ = c2;
+      *p2 = c1;
     }
     return s;
 }
