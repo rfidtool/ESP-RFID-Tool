@@ -8,14 +8,14 @@ Web:          www.LegacySecurityGroup.com/aba-decode.php?binary=1101000001100000
 
 /* Decode Track 2 data from binary */
 if (defined('STDIN')) {
-  $binary = $argv[1];
+  $binary = filter_var($argv[1], FILTER_SANITIZE_NUMBER_INT);
   define( "LINEBREAK", PHP_EOL);
 } else {
   if(isset($_POST['submit'])) {
-    $binary = $_POST["binary"];
+    $binary = filter_input(INPUT_POST, 'binary', FILTER_SANITIZE_NUMBER_INT);
   }
   else {
-    $binary = $_GET['binary'];
+    $binary = filter_input(INPUT_GET, 'binary', FILTER_SANITIZE_NUMBER_INT);
   }
   define( "LINEBREAK", "<br>");
 }
