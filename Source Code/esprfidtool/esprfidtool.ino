@@ -73,6 +73,8 @@ int ftpenabled;
 int ledenabled;
 char logname[31];
 int bufferlength;
+int txdelayus;
+int txdelayms;
 
 WiegandNG wg;
 
@@ -663,8 +665,12 @@ void settingsPage()
   "<hr>"
   "<b>Experimental Settings:</b><br>"
   "<small>Changes require a reboot.</small><br>"
-  "<small>Default 52 bits. Allowed range of 52-4096 bits. Changing this setting may result in unstable performance.</small><br>"
-  "Wiegand Buffer Length: <input type=\"number\" name=\"bufferlength\" value=\"")+bufferlength+F("\" maxlength=\"30\" size=\"31\" min=\"52\" max=\"4096\"> bits<br>"
+  "<small>Default Buffer Length is 256 bits with an allowed range of 52-4096 bits."
+  "<br>Default Experimental TX mode timing is 40us Wiegand Data Pulse Width and a 2ms Wiegand Data Interval with an allowed range of 0-1000."
+  "<br>Changing these settings may result in unstable performance.</small><br>"
+  "Wiegand Buffer Length: <input type=\"number\" name=\"bufferlength\" value=\"")+bufferlength+F("\" maxlength=\"30\" size=\"31\" min=\"52\" max=\"4096\"> bit(s)<br>"
+  "Experimental TX Wiegand Data Pulse Width: <input type=\"number\" name=\"txdelayus\" value=\"")+txdelayus+F("\" maxlength=\"30\" size=\"31\" min=\"0\" max=\"1000\"> microsecond(s)<br>"
+  "Experimental TX Wiegand Data Interval: <input type=\"number\" name=\"txdelayms\" value=\"")+txdelayms+F("\" maxlength=\"30\" size=\"31\" min=\"0\" max=\"1000\"> millisecond(s)<br>"
   "<hr>"
   "<INPUT type=\"radio\" name=\"SETTINGS\" value=\"1\" hidden=\"1\" checked=\"checked\">"
   "<INPUT type=\"submit\" value=\"Apply Settings\">"
@@ -717,6 +723,8 @@ void handleSubmitSettings()
   ledenabled = server.arg("ledenabled").toInt();
   server.arg("logname").toCharArray(logname, 31);
   bufferlength = server.arg("bufferlength").toInt();
+  txdelayus = server.arg("txdelayus").toInt();
+  txdelayms = server.arg("txdelayms").toInt();
   
   if (SETTINGSvalue == "1") {
     saveConfig();
@@ -751,6 +759,8 @@ bool loadDefaults() {
   json["ledenabled"] = "1";
   json["logname"] = "log.txt";
   json["bufferlength"] = "256";
+  json["txdelayus"] = "40";
+  json["txdelayms"] = "2";
   File configFile = SPIFFS.open("/esprfidtool.json", "w");
   json.printTo(configFile);
   loadConfig();
@@ -801,6 +811,8 @@ bool loadConfig() {
   ledenabled = json["ledenabled"];
   strcpy(logname, (const char*)json["logname"]);
   bufferlength = json["bufferlength"];
+  txdelayus = json["txdelayus"];
+  txdelayms = json["txdelayms"];
  
   IPAddress local_IP;
   local_IP.fromString(local_IPstr);
@@ -879,6 +891,8 @@ bool saveConfig() {
   json["ledenabled"] = ledenabled;
   json["logname"] = logname;
   json["bufferlength"] = bufferlength;
+  json["txdelayus"] = txdelayus;
+  json["txdelayms"] = txdelayms;
 
   File configFile = SPIFFS.open("/esprfidtool.json", "w");
   json.printTo(configFile);
@@ -1060,15 +1074,15 @@ void setup() {
       for (int i=0; i<=binHTML.length(); i++) {
         if (binHTML.charAt(i) == '0') {
           digitalWrite(DATA0, LOW);
-          delayMicroseconds(40);
+          delayMicroseconds(txdelayus);
           digitalWrite(DATA0, HIGH);
         }
         else if (binHTML.charAt(i) == '1') {
           digitalWrite(DATA1, LOW);
-          delayMicroseconds(40);
+          delayMicroseconds(txdelayus);
           digitalWrite(DATA1, HIGH);
         }
-        delay(2);
+        delay(txdelayms);
       }
 
       pinMode(DATA0, INPUT);
@@ -1091,10 +1105,10 @@ void setup() {
       for (int i=0; i<=fuzzTimes; i++) {
         digitalWrite(DATA0, LOW);
         digitalWrite(DATA1, LOW);
-        delayMicroseconds(40);
+        delayMicroseconds(txdelayus);
         digitalWrite(DATA0, HIGH);
         digitalWrite(DATA1, HIGH);
-        delay(2);
+        delay(txdelayms);
       }
 
       pinMode(DATA0, INPUT);
@@ -1117,17 +1131,17 @@ void setup() {
       for (int i=0; i<fuzzTimes; i++) {
         if (i%2==0) {
           digitalWrite(DATA0, LOW);
-          delayMicroseconds(40);
+          delayMicroseconds(txdelayus);
           digitalWrite(DATA0, HIGH);
           binALT=binALT+"0";
         }
         else {
            digitalWrite(DATA1, LOW);
-           delayMicroseconds(40);
+           delayMicroseconds(txdelayus);
            digitalWrite(DATA1, HIGH);
            binALT=binALT+"1";
         }
-        delay(2);
+        delay(txdelayms);
       }
 
       pinMode(DATA0, INPUT);
@@ -1179,6 +1193,7 @@ void setup() {
       "<small>This device operates at 3v3 and may not reliably trigger 5v devices.</small><br>"
       "<small>Recieving Wiegand data during a transmission may damage your device.</small><br>"
       "<small>Do not scan any cards during this time, use at your own risk!</small><br>"
+      "<small>Note: Timings for Wiegand data pulse width and data interval may be changed on the settings page.</small><br>"
       "<hr>"
       "<br>"
       "<FORM action=\"/experimental\" id=\"transmitbinary\" method=\"post\">"
