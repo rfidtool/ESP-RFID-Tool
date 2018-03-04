@@ -17,6 +17,7 @@ Third Party Distributors:
 * Hacker Warehouse(USA): https://hackerwarehouse.com/product/esp-rfid-tool/  
   
 Video Demos of Capturing Credentials using various technologies that utilize a Wiegand Interface:  
+* Performing a REPLAY ATTACK using the Experimental TX feature: https://youtu.be/u1y7UZpup9I  
 * Portable HID 5375 Long Range RFID Reader: https://youtu.be/B86926CHImE  
 * HID 5355 RFID/Keypad Reader: https://youtu.be/ojIpcY8Y3KQ  
 * HID multiCLASS RM40 RFID/Magstripe Reader: https://youtu.be/9OccRaLxXg8  
