@@ -39,4 +39,6 @@
  * [Gerber File](Punchdown-Adapter-2/punchdown-adapter2-Gerber.zip)  
  * [BOM File](Punchdown-Adapter-2/BOM)  
  * [Order PCB](https://pcbs.io/share/zy0jg)  
+The image pictured below is a custom build with the programming header removed, and the screwdown block replaced by a 4 pin header which was soldered in place and then broken off once the adapter was added on. I easily performed all of these modifications by hand using both a soldering iron and hot air rework station.  
+![Punchdown2-Custom](pd2-custom.jpg?raw=true)  
 ![Punchdown2-top](Punchdown-Adapter-2/top-adapter2.png?raw=true) ![Punchdown2-bottom](Punchdown-Adapter-2/bottom-adapter2.png?raw=true)  
