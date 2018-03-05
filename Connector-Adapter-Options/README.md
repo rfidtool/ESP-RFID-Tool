@@ -2,6 +2,7 @@
   
 ### Standard Screwdown Connection  
 ![ScrewDown](screwdown.jpg?raw=true)  
+![ScrewDown-Portable-5375](portable-5375.jpg?raw=true)  
   
 ### Gray Wire Nuts 22-16AWG  
   
