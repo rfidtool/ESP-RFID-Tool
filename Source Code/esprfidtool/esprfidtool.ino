@@ -480,42 +480,42 @@ void LogWiegand(WiegandNG tempwg) {
     //f.print(" "); //debug line
     f.println(cardChunk2, HEX);
   }
-  else if (countedBits==4) {
+  else if (countedBits==4||countedBits==8) {
     f.print(",Keypad Code:");
-    if (binChunk1 == 0B0000) {
+    if (binChunk1 == 0B0000||binChunk1 == 0b11110000) {
       f.println("0");
     }
-    else if (binChunk1 == 0B0001) {
+    else if (binChunk1 == 0B0001||binChunk1 == 0b11100001) {
       f.println("1");
     }
-    else if (binChunk1 == 0B0010) {
+    else if (binChunk1 == 0B0010||binChunk1 == 0b11010010) {
       f.println("2");
     }
-    else if (binChunk1 == 0B0011) {
+    else if (binChunk1 == 0B0011||binChunk1 == 0b11000011) {
       f.println("3");
     }
-    else if (binChunk1 == 0B0100) {
+    else if (binChunk1 == 0B0100||binChunk1 == 0b10110100) {
       f.println("4");
     }
-    else if (binChunk1 == 0B0101) {
+    else if (binChunk1 == 0B0101||binChunk1 == 0b10100101) {
       f.println("5");
     }
-    else if (binChunk1 == 0B0110) {
+    else if (binChunk1 == 0B0110||binChunk1 == 0b10010110) {
       f.println("6");
     }
-    else if (binChunk1 == 0B0111) {
+    else if (binChunk1 == 0B0111||binChunk1 == 0b10000111) {
       f.println("7");
     }
-    else if (binChunk1 == 0B1000) {
+    else if (binChunk1 == 0B1000||binChunk1 == 0b01111000) {
       f.println("8");
     }
-    else if (binChunk1 == 0B1001) {
+    else if (binChunk1 == 0B1001||binChunk1 == 0b01101001) {
       f.println("9");
     }
-    else if (binChunk1 == 0B1010) {
+    else if (binChunk1 == 0B1010||binChunk1 == 0b01011010) {
       f.println("*");
     }
-    else if (binChunk1 == 0B1011) {
+    else if (binChunk1 == 0B1011||binChunk1 == 0b01001011) {
       f.println("#");
     }
     else {
