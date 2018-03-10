@@ -75,6 +75,9 @@ char logname[31];
 int bufferlength;
 int txdelayus;
 int txdelayms;
+int safemode;
+
+#include "pinSEND.h"
 
 WiegandNG wg;
 
@@ -609,6 +612,16 @@ void settingsPage()
     hiddenyes="";
     hiddenno=" checked=\"checked\"";
   }
+  String safemodeyes;
+  String safemodeno;
+  if (safemode==1){
+    safemodeyes=" checked=\"checked\"";
+    safemodeno="";
+  }
+  else {
+    safemodeyes="";
+    safemodeno=" checked=\"checked\"";
+  }
   server.send(200, "text/html", 
   String()+
   F(
@@ -672,6 +685,11 @@ void settingsPage()
   "Experimental TX Wiegand Data Pulse Width: <input type=\"number\" name=\"txdelayus\" value=\"")+txdelayus+F("\" maxlength=\"30\" size=\"31\" min=\"0\" max=\"1000\"> microsecond(s)<br>"
   "Experimental TX Wiegand Data Interval: <input type=\"number\" name=\"txdelayms\" value=\"")+txdelayms+F("\" maxlength=\"30\" size=\"31\" min=\"0\" max=\"1000\"> millisecond(s)<br>"
   "<hr>"
+  "<b>Safe Mode:</b><br>"
+  "<small>Reboot the device after every capture.<br>It is possible the device becomes unstable if Disabled and may require a physical reboot.<br>Disable to avoid missing consecutive captures like pinpad entries.<br>Only set to Disabled if compiled with EXACTLY esp8266 package version 2.4.1 by ESP8266 Community from Arduino Boards Manager.<br>Binaries downloaded from the official www.RFID-Tool.com releases page will be compiled with the proper dependencies.</small><br>"
+  "Enabled <INPUT type=\"radio\" name=\"safemode\" value=\"1\"")+safemodeyes+F("><br>"
+  "Disabled <INPUT type=\"radio\" name=\"safemode\" value=\"0\"")+safemodeno+F("><br><br>"
+  "<hr>"
   "<INPUT type=\"radio\" name=\"SETTINGS\" value=\"1\" hidden=\"1\" checked=\"checked\">"
   "<INPUT type=\"submit\" value=\"Apply Settings\">"
   "</FORM>"
@@ -725,10 +743,12 @@ void handleSubmitSettings()
   bufferlength = server.arg("bufferlength").toInt();
   txdelayus = server.arg("txdelayus").toInt();
   txdelayms = server.arg("txdelayms").toInt();
+  safemode = server.arg("safemode").toInt();
   
   if (SETTINGSvalue == "1") {
     saveConfig();
     server.send(200, "text/html", F("<a href=\"/\"><- BACK TO INDEX</a><br><br><a href=\"/reboot\"><button>Reboot Device</button></a><br><br>Settings have been saved.<br>Some setting may require manually rebooting before taking effect.<br>If network configuration has changed then be sure to connect to the new network first in order to access the web interface."));
+    delay(50);
     loadConfig();
   }
   else if (SETTINGSvalue == "0") {
@@ -761,6 +781,7 @@ bool loadDefaults() {
   json["bufferlength"] = "256";
   json["txdelayus"] = "40";
   json["txdelayms"] = "2";
+  json["safemode"] = "1";
   File configFile = SPIFFS.open("/esprfidtool.json", "w");
   json.printTo(configFile);
   loadConfig();
@@ -813,6 +834,7 @@ bool loadConfig() {
   bufferlength = json["bufferlength"];
   txdelayus = json["txdelayus"];
   txdelayms = json["txdelayms"];
+  safemode = json["safemode"];
  
   IPAddress local_IP;
   local_IP.fromString(local_IPstr);
@@ -893,6 +915,7 @@ bool saveConfig() {
   json["bufferlength"] = bufferlength;
   json["txdelayus"] = txdelayus;
   json["txdelayms"] = txdelayms;
+  json["safemode"] = safemode;
 
   File configFile = SPIFFS.open("/esprfidtool.json", "w");
   json.printTo(configFile);
@@ -945,7 +968,7 @@ void ViewLog(){
   File f = SPIFFS.open(payload, "r");
   String webString = f.readString();
   f.close();
-  ShowPL = String()+F("<html><head></head><body><a href=\"/\"><- BACK TO INDEX</a><br><br><a href=\"/logs\">List Exfiltrated Data</a><br><br><a href=\"")+payload+"\"><button>Download File</button><a> - <a href=\"/deletelog?payload="+payload+"\"><button>Delete File</button></a><br><br><small>Note: Preambles shown are only a guess based on card length and may not be accurate for every card format.</small><br><pre>"+payload+"\n-----\n"+webString+"</pre></body></html>";
+  ShowPL = String()+F("<html><head></head><body><a href=\"/\"><- BACK TO INDEX</a><br><br><a href=\"/logs\">List Exfiltrated Data</a> - <a href=\"/experimental\">Experimental TX Mode</a><br><br><a href=\"")+payload+"\"><button>Download File</button><a> - <a href=\"/deletelog?payload="+payload+"\"><button>Delete File</button></a><br><br><small>Note: Preambles shown are only a guess based on card length and may not be accurate for every card format.</small><br><pre>"+payload+"\n-----\n"+webString+"</pre></body></html>";
   webString="";
   server.send(200, "text/html", ShowPL);
 }
@@ -1008,6 +1031,7 @@ void setup() {
     if(!server.authenticate(update_username, update_password))
       return server.requestAuthentication();
     server.send(200, "text/html", F("<a href=\"/\"><- BACK TO INDEX</a><br><br>Network<br>---<br>SSID: <b>ESP-RFID-Tool</b><br><br>Administration<br>---<br>USER: <b>admin</b> PASS: <b>rfidtool</b>"));
+    delay(50);
     loadDefaults();
     ESP.restart();
   });
@@ -1026,6 +1050,7 @@ void setup() {
     String deletelog;
     deletelog += server.arg(0);
     if (!deletelog.startsWith("/payloads/")) server.send(200, "text/html", String()+F("<a href=\"/\"><- BACK TO INDEX</a><br><br><a href=\"/logs\">List Exfiltrated Data</a><br><br>Deleting file: ")+deletelog);
+    delay(50);
     SPIFFS.remove(deletelog);
   });
 
@@ -1039,6 +1064,7 @@ void setup() {
     if(!server.authenticate(update_username, update_password))
     return server.requestAuthentication();
     server.send(200, "text/html", F("<a href=\"/\"><- BACK TO INDEX</a><br><br>Rebooting Device..."));
+    delay(50);
     ESP.restart();
   });
   
@@ -1046,6 +1072,7 @@ void setup() {
     if(!server.authenticate(update_username, update_password))
       return server.requestAuthentication();
     server.send(200, "text/html", F("<a href=\"/\"><- BACK TO INDEX</a><br><br>Formatting file system: This may take up to 90 seconds"));
+    delay(50);
 //    Serial.print("Formatting file system...");
     SPIFFS.format();
 //    Serial.println(" Success");
@@ -1062,6 +1089,126 @@ void setup() {
 
   server.on("/experimental", [](){
     String experimentalStatus="Awaiting Instructions";
+
+    if (server.hasArg("pinHTML")) {
+      String pinHTML=server.arg("pinHTML");
+      int pinBITS=server.arg("pinBITS").toInt();
+      int pinHTMLDELAY=server.arg("pinHTMLDELAY").toInt();
+      wg.pause();
+      digitalWrite(DATA0, HIGH);
+      pinMode(DATA0,OUTPUT);
+      digitalWrite(DATA1, HIGH);
+      pinMode(DATA1,OUTPUT);
+
+      experimentalStatus=String()+"Transmitting "+pinBITS+"bit Wiegand Format PIN: "+pinHTML+" with a "+pinHTMLDELAY+"ms delay between \"keypresses\"";
+      
+      for (int i=0; i<=pinHTML.length(); i++) {
+        if (pinHTML.charAt(i) == '0') {
+          if (pinBITS==4) {
+            pinSEND(pinHTMLDELAY,"0000");
+          }
+          else if (pinBITS==8) {
+            pinSEND(pinHTMLDELAY,"11110000");
+          }
+        }
+        else if (pinHTML.charAt(i) == '1') {
+          if (pinBITS==4) {
+            pinSEND(pinHTMLDELAY,"0001");
+          }
+          else if (pinBITS==8) {
+            pinSEND(pinHTMLDELAY,"11100001");
+          }
+        }
+        else if (pinHTML.charAt(i) == '2') {
+          if (pinBITS==4) {
+            pinSEND(pinHTMLDELAY,"0010");
+          }
+          else if (pinBITS==8) {
+            pinSEND(pinHTMLDELAY,"11010010");
+          }
+        }
+        else if (pinHTML.charAt(i) == '3') {
+          if (pinBITS==4) {
+            pinSEND(pinHTMLDELAY,"0011");
+          }
+          else if (pinBITS==8) {
+            pinSEND(pinHTMLDELAY,"11000011");
+          }
+        }
+        else if (pinHTML.charAt(i) == '4') {
+          if (pinBITS==4) {
+            pinSEND(pinHTMLDELAY,"0100");
+          }
+          else if (pinBITS==8) {
+            pinSEND(pinHTMLDELAY,"10110100");
+          }
+        }
+        else if (pinHTML.charAt(i) == '5') {
+          if (pinBITS==4) {
+            pinSEND(pinHTMLDELAY,"0101");
+          }
+          else if (pinBITS==8) {
+            pinSEND(pinHTMLDELAY,"10100101");
+          }
+        }
+        else if (pinHTML.charAt(i) == '6') {
+          if (pinBITS==4) {
+            pinSEND(pinHTMLDELAY,"0110");
+          }
+          else if (pinBITS==8) {
+            pinSEND(pinHTMLDELAY,"10010110");
+          }
+        }
+        else if (pinHTML.charAt(i) == '7') {
+          if (pinBITS==4) {
+            pinSEND(pinHTMLDELAY,"0111");
+          }
+          else if (pinBITS==8) {
+            pinSEND(pinHTMLDELAY,"10000111");
+          }
+        }
+        else if (pinHTML.charAt(i) == '8') {
+          if (pinBITS==4) {
+            pinSEND(pinHTMLDELAY,"1000");
+          }
+          else if (pinBITS==8) {
+            pinSEND(pinHTMLDELAY,"01111000");
+          }
+        }
+        else if (pinHTML.charAt(i) == '9') {
+          if (pinBITS==4) {
+            pinSEND(pinHTMLDELAY,"1001");
+          }
+          else if (pinBITS==8) {
+            pinSEND(pinHTMLDELAY,"01101001");
+          }
+        }
+        else if (pinHTML.charAt(i) == '*') {
+          if (pinBITS==4) {
+            pinSEND(pinHTMLDELAY,"1010");
+          }
+          else if (pinBITS==8) {
+            pinSEND(pinHTMLDELAY,"01011010");
+          }
+        }
+        else if (pinHTML.charAt(i) == '#') {
+          if (pinBITS==4) {
+            pinSEND(pinHTMLDELAY,"1011");
+          }
+          else if (pinBITS==8) {
+            pinSEND(pinHTMLDELAY,"01001011");
+          }
+        }
+      }
+      
+      pinMode(DATA0, INPUT);
+      pinMode(DATA1, INPUT);
+      wg.clear();
+
+      pinHTML="";
+      pinHTMLDELAY=100;
+    }
+
 
     if (server.hasArg("binHTML")) {
       String binHTML=server.arg("binHTML");
@@ -1205,6 +1352,18 @@ void setup() {
       "<br>"
       "<hr>"
       "<br>"
+      "<FORM action=\"/experimental\" id=\"transmitpin\" method=\"post\">"
+      "<b>Transmit PIN:</b><br>"
+      "<small>Allowable character set(1234567890*#)</small><br>"
+      "<small>PIN: </small><INPUT form=\"transmitpin\" type=\"text\" name=\"pinHTML\" value=\"\" pattern=\"[0-9*#]{1,}\" required title=\"Allowable character set(1234567890*#), must not be empty\" minlength=\"1\" size=\"52\"><br>"
+      "<small>Delay between \"keypresses\": </small><INPUT form=\"transmitpin\" type=\"number\" name=\"pinHTMLDELAY\" value=\"100\" minlength=\"1\" min=\"0\" size=\"8\"><small>ms</small><br>"
+      "<INPUT form=\"transmitpin\" type=\"radio\" name=\"pinBITS\" id=\"pinBITS\" value=\"4\" checked required> <small>4bit Wiegand PIN Format</small>   "
+      "<INPUT form=\"transmitpin\" type=\"radio\" name=\"pinBITS\" id=\"pinBITS\" value=\"8\" required> <small>8bit Wiegand PIN Format</small><br>"
+      "<INPUT form=\"transmitpin\" type=\"submit\" value=\"Transmit\"><br>"
+      "</FORM>"
+      "<br>"
+      "<hr>"
+      "<br>"
       "<b>Fuzzing:</b><br><br>"
       "<FORM action=\"/experimental\" id=\"fuzz\" method=\"post\">"
       "<b>Number of bits:</b>"
@@ -1235,6 +1394,13 @@ void setup() {
       "</html>"
       )
     );
+
+    if (server.args()>=1) {
+      if (safemode==1) {
+        delay(50);
+        ESP.restart();
+      }
+    }
 
   });
 
@@ -1293,7 +1459,9 @@ void loop()
     wg.pause();             // pause Wiegand pin interrupts
     LogWiegand(wg);
     wg.clear();             // compulsory to call clear() to enable interrupts for subsequent data
-    ESP.restart();
+    if (safemode==1) {
+      ESP.restart();
+    }
   }
 
 }
