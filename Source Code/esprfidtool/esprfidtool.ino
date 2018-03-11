@@ -1142,7 +1142,7 @@ void setup() {
       }
 
       if (server.hasArg("bruteSTART")) {
-        server.send(200, "text/html", String()+"<a href=\"/\"><- BACK TO INDEX</a><br><br><a href=\"/experimental\"><- BACK TO EXPERIMENTAL TX MODE</a><br><br>Brute forcing "+pinBITS+"bit Wiegand Format PIN from "+bruteSTART+" to "+bruteEND+" with a "+pinHTMLDELAY+"ms delay between \"keypresses\"<br>This may take a while, your device will be busy until the sequence has been completely transmitted!<br>Please \"STOP CURRENT TRANSMISSION\" before attempting to use your device or simply wait for the transmission to finish.<br>You can view if the brute force attempt has completed by returning to the Experimental TX page and checking the status located under \"Bruteforce PIN\"<br><br><a href=\"/stoptx\"><button>STOP CURRENT TRANSMISSION</button></a>");
+        server.send(200, "text/html", String()+"<a href=\"/\"><- BACK TO INDEX</a><br><br><a href=\"/experimental\"><- BACK TO EXPERIMENTAL TX MODE</a><br><br>Brute forcing "+pinBITS+"bit Wiegand Format PIN from "+(server.arg("bruteSTART"))+" to "+(server.arg("bruteEND"))+" with a "+pinHTMLDELAY+"ms delay between \"keypresses\"<br>This may take a while, your device will be busy until the sequence has been completely transmitted!<br>Please \"STOP CURRENT TRANSMISSION\" before attempting to use your device or simply wait for the transmission to finish.<br>You can view if the brute force attempt has completed by returning to the Experimental TX page and checking the status located under \"Bruteforce PIN\"<br><br><a href=\"/stoptx\"><button>STOP CURRENT TRANSMISSION</button></a>");
         delay(50);
       }
 
