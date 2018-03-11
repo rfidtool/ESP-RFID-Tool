@@ -27,6 +27,8 @@ Video Demos of Capturing Credentials using various technologies that utilize a W
 Firmware:  
 * Official  
   * ESP-RFID-Tool: https://github.com/rfidtool/ESP-RFID-Tool/releases  
+    * Releases >=1.1.0 are compiled with esp8266 board manager package 2.4.1  
+    * Releases < 1.1.0 are compiled with esp8266 board manager package 2.3.0  
 * Unofficial  
   * Port of Tastic RFID Thief: https://github.com/exploitagency/ESP-RFID-Thief/releases  
   
