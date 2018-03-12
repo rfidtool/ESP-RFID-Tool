@@ -78,7 +78,7 @@ The device was made with minimal hardware to keep costs extremely low and in rea
   
 ## Making Sense of the Binary Data  
 [Keypads](Keypad/README.md)  
-[Magstripe](Magstripe/README.md)  
+[Magstripe/ABA Format](Magstripe/README.md)  
   
 ## Flashing Firmware  
 From Web Interface:  

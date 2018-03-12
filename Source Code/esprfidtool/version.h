@@ -1,1 +1,1 @@
-String version = "1.1.1337";
+String version = "1.1.2";
