@@ -1238,6 +1238,19 @@ void setup() {
         bruteENDchar=(server.arg("bruteENDchar"));
       }
 
+      unsigned long bruteFAILdelay=0;
+      unsigned long bruteFAILS=0;
+      int bruteFAILmultiplier=0;
+      int bruteFAILmultiplierCURRENT=0;
+      int bruteFAILmultiplierAFTER=0;
+      int delayAFTERpin=0;
+      int bruteFAILSmax=0;
+      bruteFAILSmax=(server.arg("bruteFAILSmax")).toInt();
+      delayAFTERpin=(server.arg("delayAFTERpin")).toInt();
+      bruteFAILdelay=(server.arg("bruteFAILdelay")).toInt();
+      bruteFAILmultiplier=(server.arg("bruteFAILmultiplier")).toInt();
+      bruteFAILmultiplierAFTER=(server.arg("bruteFAILmultiplierAFTER")).toInt();
+
       for (int brute=bruteSTART; brute<=bruteEND; brute++) {
 
         if (bruteforcing==1) {
@@ -1359,6 +1372,30 @@ void setup() {
           break;
         }
 
+        bruteFAILS++;
+
+        if (bruteFAILS>=4294967000) {
+          bruteFAILS=(4294966000);
+        }
+        if (bruteFAILdelay>=4294967000) {
+          bruteFAILdelay=(4294966000);
+        }
+        
+        if (bruteFAILmultiplier!=0) {
+          bruteFAILmultiplierCURRENT++;
+          if (bruteFAILmultiplierCURRENT>=bruteFAILmultiplierAFTER) {
+            bruteFAILmultiplierCURRENT=0;
+            bruteFAILdelay=(bruteFAILdelay*bruteFAILmultiplier);
+          }
+        }
+        
+        if ((bruteFAILS>=bruteFAILSmax)&&(bruteFAILSmax!=0)) {
+          delay(bruteFAILdelay*1000);
+        }
+        else {
+          delay(delayAFTERpin);
+        }
+        
       }
       pinMode(DATA0, INPUT);
       pinMode(DATA1, INPUT);
@@ -1370,6 +1407,13 @@ void setup() {
       brutePAD=0;
       bruteSTARTchar="";
       bruteENDchar="";
+      bruteFAILdelay=0;
+      bruteFAILS=0;
+      bruteFAILmultiplier=0;
+      bruteFAILmultiplierCURRENT=0;
+      bruteFAILmultiplierAFTER=0;
+      delayAFTERpin=0;
+      bruteFAILSmax=0;
     }
 
 
@@ -1537,11 +1581,16 @@ void setup() {
       "<br>"
       "<FORM action=\"/experimental\" id=\"brutepin\" method=\"post\">"
       "<b>Bruteforce PIN:</b><br>"
+      "<small>Delay between \"keypresses\": </small><INPUT form=\"brutepin\" type=\"number\" name=\"pinHTMLDELAY\" value=\"3\" minlength=\"1\" min=\"0\" size=\"8\"><small>ms</small><br>"
+      "<small>Delay between entering complete PINs: </small><INPUT form=\"brutepin\" type=\"number\" name=\"delayAFTERpin\" value=\"0\" minlength=\"1\" min=\"0\" size=\"8\"><small>ms</small><br>"
       "<small>PIN begins with character(s): </small><INPUT form=\"brutepin\" type=\"text\" name=\"bruteSTARTchar\" value=\"\" pattern=\"[0-9*#]{0,}\" title=\"Allowable character set(1234567890*#)\" size=\"8\"><br>"
       "<small>PIN start position: </small><INPUT form=\"brutepin\" type=\"number\" name=\"bruteSTART\" value=\"0000\" minlength=\"1\" min=\"0\" size=\"8\"><br>"
       "<small>PIN end position: </small><INPUT form=\"brutepin\" type=\"number\" name=\"bruteEND\" value=\"9999\" minlength=\"1\" min=\"0\" size=\"8\"><br>"
       "<small>PIN ends with character(s): </small><INPUT form=\"brutepin\" type=\"text\" name=\"bruteENDchar\" value=\"#\" pattern=\"[0-9*#]{0,}\" title=\"Allowable character set(1234567890*#)\" size=\"8\"><br>"
-      "<small>Delay between \"keypresses\": </small><INPUT form=\"brutepin\" type=\"number\" name=\"pinHTMLDELAY\" value=\"3\" minlength=\"1\" min=\"0\" size=\"8\"><small>ms</small><br>"
+      "<small>NOTE: The advanced timing settings listed below override the \"Delay between entering complete PINs\" setting(listed above) when the conditions listed below are met.</small><br>"
+      "<small>Number of failed PIN attempts(X) before a delay: </small><INPUT form=\"brutepin\" type=\"number\" name=\"bruteFAILSmax\" value=\"0\" minlength=\"1\" min=\"0\" size=\"8\"><br>"
+      "<small>Delay in seconds(Y) after [X] failed PINs: </small><INPUT form=\"brutepin\" type=\"number\" name=\"bruteFAILdelay\" value=\"0\" minlength=\"1\" min=\"0\" size=\"8\"><small>s</small><br>"
+      "<small>Multiply delay [Y] by <INPUT form=\"brutepin\" type=\"number\" name=\"bruteFAILmultiplier\" value=\"0\" minlength=\"1\" min=\"0\" size=\"4\"> after every <INPUT form=\"brutepin\" type=\"number\" name=\"bruteFAILmultiplierAFTER\" value=\"0\" minlength=\"1\" min=\"0\" size=\"4\"> failed pin attempts</small><br>"
       "<INPUT form=\"brutepin\" type=\"radio\" name=\"pinBITS\" id=\"pinBITS\" value=\"4\" checked required> <small>4bit Wiegand PIN Format</small>   "
       "<INPUT form=\"brutepin\" type=\"radio\" name=\"pinBITS\" id=\"pinBITS\" value=\"8\" required> <small>8bit Wiegand PIN Format</small><br>"
       "<INPUT form=\"brutepin\" type=\"submit\" value=\"Transmit\"></FORM><br>"
