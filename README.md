@@ -38,6 +38,8 @@ Firmware:  
   * Capturing card values to later be cloned.  
   * Replaying raw binary captures.*(see note below)  
   * Fuzzing access control systems.*(see note below)  
+  * Brute forcing PIN codes.*(see note below) 
+  * Denial of Service mode.*(see note below) 
 * To create a standalone device for capturing credentials or testing badges and or card readers without the need for a Wiegand Controller.  
   * Add a battery and a card reader to make the unit portable.  
   * Add a benchtop power supply to use for testing hardware.  
