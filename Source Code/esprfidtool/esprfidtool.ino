@@ -1100,7 +1100,7 @@ void setup() {
       char bin2hexCHAR[bin2hexBUFFlen];
       (server.arg("bin2hexHTML")).toCharArray(bin2hexCHAR,bin2hexBUFFlen);
 
-      dataCONVERSION+=String()+F("Binary:")+bin2hexCHAR+F("<br><br>");
+      dataCONVERSION+=String()+F("Binary: ")+bin2hexCHAR+F("<br><br>");
 
       String hexTEMP="";
 
@@ -1110,8 +1110,8 @@ void setup() {
         char tempNIBBLE[5];
         strncpy(tempNIBBLE, &bin2hexCHAR[currentBINpos], 4);
         tempNIBBLE[4]='\0';
-        sprintf(hexCHAR, "%02X", (strtol(tempNIBBLE, NULL, 2)));
-        hexTEMP+=hexCHAR[1];
+        sprintf(hexCHAR, "%X", (strtol(tempNIBBLE, NULL, 2)));
+        hexTEMP+=hexCHAR;
       }
 
       dataCONVERSION+=String()+F("Hexidecimal: ")+hexTEMP+F("<br><small>You may want to drop the leading zero(if there is one) and if your cloning software does not handle it for you.<br><br>");
@@ -1120,6 +1120,40 @@ void setup() {
       dataCONVERSION+=F("<br><br>");
       
       bin2hexBUFFlen=0;
+    }
+
+    if (server.hasArg("hex2binHTML")) {
+
+      int hex2binBUFFlen=(((server.arg("hex2binHTML")).length())+1);
+      char hex2binCHAR[hex2binBUFFlen];
+      (server.arg("hex2binHTML")).toCharArray(hex2binCHAR,hex2binBUFFlen);
+
+      dataCONVERSION+=String()+F("Hexidecimal: ")+hex2binCHAR+F("<br><br>");
+
+      String binTEMP="";
+
+      int charCOUNT=(hex2binBUFFlen-1);
+      for (int currentHEXpos=0; currentHEXpos<charCOUNT; currentHEXpos++) {
+        char binCHAR[5];
+        char tempHEX[2];
+        strncpy(tempHEX, &hex2binCHAR[currentHEXpos], 1);
+        tempHEX[1]='\0';
+        int decimal=(unsigned char)strtoul(tempHEX, NULL, 16);
+        itoa(decimal,binCHAR,2);
+        while (strlen(binCHAR) < 4) {
+          char *dup;
+          sprintf(binCHAR,"%s%s","0",(dup=strdup(binCHAR)));
+          free(dup);
+        }
+        binTEMP+=binCHAR;
+      }
+
+      dataCONVERSION+=String()+F("Binary: ")+binTEMP+F("<br><br>");
+      binTEMP="";
+      
+      dataCONVERSION+=F("<br><br>");
+      
+      hex2binBUFFlen=0;
     }
     
     if (server.hasArg("abaHTML")) {
@@ -1162,10 +1196,17 @@ void setup() {
       "</FORM>"
       "<br>"
       "<FORM action=\"/data-convert\" id=\"bin2hex\" method=\"post\">"
-      "<b>Convert Binary Data to HEX:</b><br>"
+      "<b>Convert Binary Data to Hexidecimal:</b><br>"
       "<small>For use with card cloning, typically includes both the preamble and card data(binary before and after the space in log).</small><br>"
       "<INPUT form=\"bin2hex\" type=\"text\" name=\"bin2hexHTML\" value=\"\" pattern=\"[0-1]{1,}\" required title=\"Only 0's & 1's allowed, no spaces allowed, must not be empty\" minlength=\"1\" size=\"52\"><br>"
       "<INPUT form=\"bin2hex\" type=\"submit\" value=\"Convert\"><br>"
+      "</FORM>"
+      "<br>"
+      "<FORM action=\"/data-convert\" id=\"hex2bin\" method=\"post\">"
+      "<b>Convert Hexidecimal Data to Binary:</b><br>"
+      "<small>In some situations you may want to add a leading zero to pad the output to come up with the correct number of bits.</small><br>"
+      "<INPUT form=\"hex2bin\" type=\"text\" name=\"hex2binHTML\" value=\"\" pattern=\"[0-9a-fA-F]{1,}\" required title=\"Only characters 0-9 A-F a-f allowed, no spaces allowed, must not be empty\" minlength=\"1\" size=\"52\"><br>"
+      "<INPUT form=\"hex2bin\" type=\"submit\" value=\"Convert\"><br>"
       "</FORM>"
       )
     );
