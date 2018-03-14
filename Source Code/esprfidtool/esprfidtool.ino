@@ -86,7 +86,7 @@ String dataCONVERSION="";
 
 WiegandNG wg;
 
-void LogWiegand(WiegandNG tempwg) {
+void LogWiegand(WiegandNG &tempwg) {
   volatile unsigned char *buffer=tempwg.getRawData();
   unsigned int bufferSize = tempwg.getBufferSize();
   unsigned int countedBits = tempwg.getBitCounted();
@@ -691,7 +691,7 @@ void settingsPage()
   "Experimental TX Wiegand Data Interval: <input type=\"number\" name=\"txdelayms\" value=\"")+txdelayms+F("\" maxlength=\"30\" size=\"31\" min=\"0\" max=\"1000\"> millisecond(s)<br>"
   "<hr>"
   "<b>Safe Mode:</b><br>"
-  "<small>Reboot the device after every capture.<br>It is possible the device becomes unstable if Disabled and may require a physical reboot.<br>Disable to avoid missing consecutive captures like pinpad entries.<br>Only set to Disabled if compiled with EXACTLY esp8266 package version 2.4.1 by ESP8266 Community from Arduino Boards Manager.<br>Binaries downloaded from the official www.RFID-Tool.com releases page will be compiled with the proper dependencies.</small><br>"
+  "<small>Enable to reboot the device after every capture.<br>Disable to avoid missing quick consecutive captures such as keypad entries.</small><br>"
   "Enabled <INPUT type=\"radio\" name=\"safemode\" value=\"1\"")+safemodeyes+F("><br>"
   "Disabled <INPUT type=\"radio\" name=\"safemode\" value=\"0\"")+safemodeno+F("><br><br>"
   "<hr>"
@@ -786,7 +786,7 @@ bool loadDefaults() {
   json["bufferlength"] = "256";
   json["txdelayus"] = "40";
   json["txdelayms"] = "2";
-  json["safemode"] = "1";
+  json["safemode"] = "0";
   File configFile = SPIFFS.open("/esprfidtool.json", "w");
   json.printTo(configFile);
   loadConfig();
