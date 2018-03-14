@@ -77,6 +77,7 @@ int txdelayus;
 int txdelayms;
 int safemode;
 
+int dos=0;
 int TXstatus=0;
 String pinHTML;
 
@@ -391,7 +392,7 @@ void LogWiegand(WiegandNG &tempwg) {
   
   f.print(String()+countedBits+F(" bit card,"));
 
-  if (countedBits==4) {
+  if (countedBits==4||countedBits==8) {
     f.print(F("possible keypad entry,"));
   }
 
@@ -1266,7 +1267,7 @@ void setup() {
       }
 
       if (server.hasArg("bruteSTART")) {
-        server.send(200, "text/html", String()+"<a href=\"/\"><- BACK TO INDEX</a><br><br><a href=\"/experimental\"><- BACK TO EXPERIMENTAL TX MODE</a><br><br>Brute forcing "+pinBITS+"bit Wiegand Format PIN from "+(server.arg("bruteSTART"))+" to "+(server.arg("bruteEND"))+" with a "+pinHTMLDELAY+"ms delay between \"keypresses\"<br>This may take a while, your device will be busy until the sequence has been completely transmitted!<br>Please \"STOP CURRENT TRANSMISSION\" before attempting to use your device or simply wait for the transmission to finish.<br>You can view if the brute force attempt has completed by returning to the Experimental TX page and checking the status located under \"Bruteforce PIN\"<br><br><a href=\"/stoptx\"><button>STOP CURRENT TRANSMISSION</button></a>");
+        server.send(200, "text/html", String()+"<a href=\"/\"><- BACK TO INDEX</a><br><br><a href=\"/experimental\"><- BACK TO EXPERIMENTAL TX MODE</a><br><br>Brute forcing "+pinBITS+"bit Wiegand Format PIN from "+(server.arg("bruteSTART"))+" to "+(server.arg("bruteEND"))+" with a "+pinHTMLDELAY+"ms delay between \"keypresses\"<br>This may take a while, your device will be busy until the sequence has been completely transmitted!<br>Please \"STOP CURRENT TRANSMISSION\" before attempting to use your device or simply wait for the transmission to finish.<br>You can view if the brute force attempt has completed by returning to the Experimental TX page and checking the status located under \"Transmit Status\"<br><br><a href=\"/stoptx\"><button>STOP CURRENT TRANSMISSION</button></a>");
         delay(50);
       }
 
@@ -1489,41 +1490,103 @@ void setup() {
     }
 
     if (server.arg("fuzzType")=="simultaneous") {
+
+      int fuzzTimes=0;
+      dos=0;
+      if ((server.arg("fuzzTimes"))=="dos") {
+        dos=1;
+        server.send(200, "text/html", String()+
+        "<a href=\"/\"><- BACK TO INDEX</a><br><br>"
+        "<a href=\"/experimental\"><- BACK TO EXPERIMENTAL TX MODE</a><br><br>"
+        "Denial of Service mode active.<br>Transmitting D0 and D1 bits simultaneously until stopped."
+        "<br>This may take a while, your device will be busy until the sequence has been completely transmitted!"
+        "<br>Please \"STOP CURRENT TRANSMISSION\" before attempting to use your device or simply wait for the transmission to finish.<br>"
+        "You can view if the fuzzing attempt has completed by returning to the Experimental TX page and checking the status located under \"Transmit Status\"<br><br>"
+        "<a href=\"/stoptx\"><button>STOP CURRENT TRANSMISSION</button></a>");
+        delay(50);
+      }
+      else {
+        fuzzTimes=server.arg("fuzzTimes").toInt();
+        server.send(200, "text/html", String()+
+        "<a href=\"/\"><- BACK TO INDEX</a><br><br>"
+        "<a href=\"/experimental\"><- BACK TO EXPERIMENTAL TX MODE</a><br><br>"
+        "Transmitting D0 and D1 bits simultaneously "+fuzzTimes+" times."
+        "<br>This may take a while, your device will be busy until the sequence has been completely transmitted!"
+        "<br>Please \"STOP CURRENT TRANSMISSION\" before attempting to use your device or simply wait for the transmission to finish.<br>"
+        "You can view if the fuzzing attempt has completed by returning to the Experimental TX page and checking the status located under \"Transmit Status\"<br><br>"
+        "<a href=\"/stoptx\"><button>STOP CURRENT TRANSMISSION</button></a>");
+        delay(50);
+      }
+      
       wg.pause();
       digitalWrite(DATA0, HIGH);
       pinMode(DATA0,OUTPUT);
       digitalWrite(DATA1, HIGH);
       pinMode(DATA1,OUTPUT);
 
-      int fuzzTimes=server.arg("fuzzTimes").toInt();
+      TXstatus=1;
 
-      for (int i=0; i<=fuzzTimes; i++) {
+      for (int i=0; i<=fuzzTimes || dos==1; i++) {
         digitalWrite(DATA0, LOW);
         digitalWrite(DATA1, LOW);
         delayMicroseconds(txdelayus);
         digitalWrite(DATA0, HIGH);
         digitalWrite(DATA1, HIGH);
         delay(txdelayms);
+        server.handleClient();
+        if (TXstatus!=1) {
+          break;
+        }
       }
 
       pinMode(DATA0, INPUT);
       pinMode(DATA1, INPUT);
       wg.clear();
+      TXstatus=0;
+      dos=0;
 
-      experimentalStatus=String()+"Transmitting D0 and D1 bits simultaneously "+fuzzTimes+" times.";
+      //experimentalStatus=String()+"Transmitting D0 and D1 bits simultaneously "+fuzzTimes+" times.";
     }
 
     if (server.arg("fuzzType")=="alternating") {
+
+      int fuzzTimes=0;
+      dos=0;
+      if ((server.arg("fuzzTimes"))=="dos") {
+        dos=1;
+        server.send(200, "text/html", String()+
+        "<a href=\"/\"><- BACK TO INDEX</a><br><br>"
+        "<a href=\"/experimental\"><- BACK TO EXPERIMENTAL TX MODE</a><br><br>"
+        "Denial of Service mode active.<br>Transmitting bits alternating between D0 and D1 until stopped."
+        "<br>This may take a while, your device will be busy until the sequence has been completely transmitted!"
+        "<br>Please \"STOP CURRENT TRANSMISSION\" before attempting to use your device or simply wait for the transmission to finish.<br>"
+        "You can view if the fuzzing attempt has completed by returning to the Experimental TX page and checking the status located under \"Transmit Status\"<br><br>"
+        "<a href=\"/stoptx\"><button>STOP CURRENT TRANSMISSION</button></a>");
+        delay(50);
+      }
+      else {
+        fuzzTimes=server.arg("fuzzTimes").toInt();
+        server.send(200, "text/html", String()+
+        "<a href=\"/\"><- BACK TO INDEX</a><br><br>"
+        "<a href=\"/experimental\"><- BACK TO EXPERIMENTAL TX MODE</a><br><br>"
+        "Transmitting "+fuzzTimes+" bits alternating between D0 and D1."
+        "<br>This may take a while, your device will be busy until the sequence has been completely transmitted!"
+        "<br>Please \"STOP CURRENT TRANSMISSION\" before attempting to use your device or simply wait for the transmission to finish.<br>"
+        "You can view if the fuzzing attempt has completed by returning to the Experimental TX page and checking the status located under \"Transmit Status\"<br><br>"
+        "<a href=\"/stoptx\"><button>STOP CURRENT TRANSMISSION</button></a>");
+        delay(50);
+      }
+      
       wg.pause();
       digitalWrite(DATA0, HIGH);
       pinMode(DATA0,OUTPUT);
       digitalWrite(DATA1, HIGH);
       pinMode(DATA1,OUTPUT);
 
-      int fuzzTimes=server.arg("fuzzTimes").toInt();
       String binALT="";
+      TXstatus=1;
 
-      for (int i=0; i<fuzzTimes; i++) {
+      for (int i=0; i<fuzzTimes || dos==1; i++) {
         if (i%2==0) {
           digitalWrite(DATA0, LOW);
           delayMicroseconds(txdelayus);
@@ -1537,13 +1600,19 @@ void setup() {
            binALT=binALT+"1";
         }
         delay(txdelayms);
+        server.handleClient();
+        if (TXstatus!=1) {
+          break;
+        }
       }
 
       pinMode(DATA0, INPUT);
       pinMode(DATA1, INPUT);
       wg.clear();
+      TXstatus=0;
+      dos=0;
 
-      experimentalStatus=String()+"Transmitting alternating bits: "+binALT;
+      //experimentalStatus=String()+"Transmitting alternating bits: "+binALT;
       binALT="";
     }
 
@@ -1571,7 +1640,17 @@ void setup() {
 
     String activeTX="";
     if (TXstatus==1) {
-       activeTX="Transmitting PIN "+pinHTML+"<br><a href=\"/stoptx\"><button>STOP CURRENT ATTACK</button></a>";
+      
+      if (pinHTML!="") {
+        activeTX="Brute forcing PIN: "+pinHTML+"<br><a href=\"/stoptx\"><button>STOP CURRENT TRANSMISSION</button></a>";
+      }
+      else if (dos==1) {
+        activeTX="Denial of Service mode active...<br><a href=\"/stoptx\"><button>STOP CURRENT TRANSMISSION</button></a>";
+      }
+      else {
+        activeTX="Transmitting...<br><a href=\"/stoptx\"><button>STOP CURRENT TRANSMISSION</button></a>";
+      }
+      
     }
     else {
       activeTX="INACTIVE<br><button>NOTHING TO STOP</button>";
@@ -1586,17 +1665,18 @@ void setup() {
       "<title>Experimental TX Mode</title>"
       "</head>"
       "<body>"
-      )+F("Experimental Status: ")+experimentalStatus+"<br><br>"+F(
-      "<a href=\"/\"><- BACK TO INDEX</a><br><br>"
+      )+experimentalStatus+"<br><br>"
+      +F(
+      "<b>Transmit Status:</b> ")+activeTX+F("<br><br>"
+      "<a href=\"/\"><- BACK TO INDEX</a><br>"
       "<P>"
       "<h1>Experimental TX Mode</h1>"
       "<hr>"
-      "<b>Warning:</b><br>"
-      "<small>This mode is highly experimental, use at your own risk!</small><br>"
-      "<small>This device operates at 3v3 and may not reliably trigger 5v devices.</small><br>"
-      "<small>Recieving Wiegand data during a transmission may damage your device.</small><br>"
-      "<small>Do not scan any cards during this time, use at your own risk!</small><br>"
-      "<small>Note: Timings for Wiegand data pulse width and data interval may be changed on the settings page.</small><br>"
+      "<small>"
+      "<b>Warning:</b> This mode is highly experimental, use at your own risk!<br>"
+      "Note: Timings for the Wiegand Data Pulse Width and Wiegand Data Interval may be changed on the settings page."
+      "</small>"
+      "<br>"
       "<hr>"
       "<br>"
       "<FORM action=\"/experimental\" id=\"transmitbinary\" method=\"post\">"
@@ -1636,13 +1716,13 @@ void setup() {
       "<INPUT form=\"brutepin\" type=\"radio\" name=\"pinBITS\" id=\"pinBITS\" value=\"8\" required> <small>8bit Wiegand PIN Format</small><br>"
       "<INPUT form=\"brutepin\" type=\"submit\" value=\"Transmit\"></FORM><br>"
       "<br>"
-      "Brute force status: ")+activeTX+F("<br>"
       "<hr>"
       "<br>"
       "<b>Fuzzing:</b><br><br>"
       "<FORM action=\"/experimental\" id=\"fuzz\" method=\"post\">"
       "<b>Number of bits:</b>"
-      "<INPUT form=\"fuzz\" type=\"text\" name=\"fuzzTimes\" value=\"\" pattern=\"^[1-9]+[0-9]*$\" required title=\"Must be a number > 0, must not be empty\" minlength=\"1\" size=\"32\"><br>"
+      "<INPUT form=\"fuzz\" type=\"number\" name=\"fuzzTimes\" value=\"100\" minlength=\"1\" min=\"1\" max=\"2147483647\" size=\"32\"><br>"
+      //"<INPUT form=\"fuzz\" type=\"text\" name=\"fuzzTimes\" value=\"\" pattern=\"^[1-9]+[0-9]*$\" required title=\"Must be a number > 0, must not be empty \" minlength=\"1\" size=\"32\"><br>"
       "<INPUT form=\"fuzz\" type=\"radio\" name=\"fuzzType\" id=\"simultaneous\" value=\"simultaneous\" required> <small>Transmit a bit simultaneously on D0 and D1 (X bits per each line)</small><br>"
       "<INPUT form=\"fuzz\" type=\"radio\" name=\"fuzzType\" id=\"alternating\" value=\"alternating\"> <small>Transmit X bits alternating between D0 and D1 each bit (01010101,etc)</small><br>"
       "<INPUT form=\"fuzz\" type=\"submit\" value=\"Fuzz\"><br>"
@@ -1650,9 +1730,20 @@ void setup() {
       "<br>"
       "<hr>"
       "<br>"
+      "<b>Denial Of Service Mode:</b><br><br>"
+      "<FORM action=\"/experimental\" id=\"dos\" method=\"post\">"
+      "<b>Type of Attack:</b>"
+      "<INPUT hidden=\"1\" form=\"dos\" type=\"text\" name=\"fuzzTimes\" value=\"dos\"><br>"
+      "<INPUT form=\"dos\" type=\"radio\" name=\"fuzzType\" id=\"simultaneous\" value=\"simultaneous\" required> <small>Transmit a bit simultaneously on D0 and D1 until stopped</small><br>"
+      "<INPUT form=\"dos\" type=\"radio\" name=\"fuzzType\" id=\"alternating\" value=\"alternating\"> <small>Transmit bits alternating between D0 and D1 each bit (01010101,etc) until stopped</small><br>"
+      "<INPUT form=\"dos\" type=\"submit\" value=\"Start DoS\"><br>"
+      "</FORM>"
+      "<br>"
+      "<hr>"
+      "<br>"
       "<b>Push Button for Door Open:</b><br>"
       "<small>Connect \"Push to Open\" wire from the reader to the RX pin(GPIO3) on the programming header on ESP-RFID-Tool.</small><br>"
-      "<small>Warning! Selecting the wrong trigger signal type may cause damage to the connected reader.</small><br><br>"
+      "<small>Warning! Selecting the wrong trigger signal type may cause damage to the connected hardware.</small><br><br>"
       "<FORM action=\"/experimental\" id=\"push\" method=\"post\">"
       "<b>Time in ms to push the door open button:</b>"
       "<INPUT form=\"push\" type=\"text\" name=\"pushTime\" value=\"50\" pattern=\"^[1-9]+[0-9]*$\" required title=\"Must be a number > 0, must not be empty\" minlength=\"1\" size=\"32\"><br>"
