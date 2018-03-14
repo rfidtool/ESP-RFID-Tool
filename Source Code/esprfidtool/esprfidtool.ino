@@ -1114,7 +1114,7 @@ void setup() {
         hexTEMP+=hexCHAR;
       }
 
-      dataCONVERSION+=String()+F("Hexidecimal: ")+hexTEMP+F("<br><small>You may want to drop the leading zero(if there is one) and if your cloning software does not handle it for you.<br><br>");
+      dataCONVERSION+=String()+F("Hexidecimal: ")+hexTEMP+F("<br><small>You may want to drop the leading zero(if there is one) and if your cloning software does not handle it for you.</small><br><br>");
       hexTEMP="";
       
       dataCONVERSION+=F("<br><br>");
