@@ -64,6 +64,7 @@ void apilistlogs(int prettify) {
     String FileName = dir2ndrun.fileName();
     if ((!FileName.startsWith("/payloads/"))&&(!FileName.startsWith("/esploit.json"))&&(!FileName.startsWith("/esportal.json"))&&(!FileName.startsWith("/esprfidtool.json"))&&(!FileName.startsWith("/config.json"))) {
       currentlog++;
+      FileName.remove(0,1);
       JsonObject& apilistlogs = apilog.createNestedObject(String(currentlog));
       apilistlogs["File Name"]=FileName;
     }

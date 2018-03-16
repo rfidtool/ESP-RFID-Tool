@@ -1,12 +1,20 @@
 server.on("/api/help", [](){
-  String apihelpHTML=F(
+  String apihelpHTML=String()+F(
   "<a href=\"/\"><- BACK TO INDEX</a><br><br>"
-  "<b>/api/info</b><br>"
+  "<b>API Version: "
+  )+APIversion+F(
+  "</b><br><br>"
+  "<b><a href=\"/api/info?prettify=1\">/api/info</a></b><br>"
   "<small>Usage: [server]/api/info</small><br>"
-  "<b>/api/viewlog</b><br>"
+  "<br>"
+  "<b><a href=\"/api/viewlog?logfile="
+  )+logname+F(
+  "&prettify=1\">/api/viewlog</a></b><br>"
   "<small>Usage: [server]/api/viewlog?logfile=[log.txt]</small><br>"
-  "<b>/api/listlogs</b><br>"
+  "<br>"
+  "<b><a href=\"/api/listlogs?prettify=1\">/api/listlogs</a></b><br>"
   "<small>Usage: [server]/api/listlogs</small><br>"
+  "<br>"
   "<b>Optional Arguments</b><br>"
   "<small>Prettify: [api-url]?[args]<u>&prettify=1</u></small><br>"
   );
