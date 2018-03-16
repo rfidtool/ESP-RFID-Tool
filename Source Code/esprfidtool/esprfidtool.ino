@@ -56,6 +56,8 @@ DNSServer dnsServer;
 
 HTTPClient http;
 
+#include "api.h"
+
 const char* update_path = "/update";
 int accesspointmode;
 char ssid[32];
@@ -531,6 +533,9 @@ void LogWiegand(WiegandNG &tempwg) {
       f.println("?");
     }
   }
+  else if (countedBits==248) {
+    f.println(",");
+  }
   else {
     f.println("");
   }
@@ -790,6 +795,8 @@ bool loadDefaults() {
   json["safemode"] = "0";
   File configFile = SPIFFS.open("/esprfidtool.json", "w");
   json.printTo(configFile);
+  configFile.close();
+  jsonBuffer.clear();
   loadConfig();
 }
 
@@ -895,7 +902,8 @@ bool loadConfig() {
 //    Serial.print("IP address = ");
 //    Serial.println(WiFi.localIP());
   }
-
+  configFile.close();
+  jsonBuffer.clear();
   return true;
 }
 
@@ -925,6 +933,8 @@ bool saveConfig() {
 
   File configFile = SPIFFS.open("/esprfidtool.json", "w");
   json.printTo(configFile);
+  configFile.close();
+  jsonBuffer.clear();
   return true;
 }
 
@@ -949,6 +959,7 @@ void ListLogs(){
     File f = dir.openFile("r");
     FileList += " ";
     if((!FileName.startsWith("/payloads/"))&&(!FileName.startsWith("/esploit.json"))&&(!FileName.startsWith("/esportal.json"))&&(!FileName.startsWith("/esprfidtool.json"))&&(!FileName.startsWith("/config.json"))) FileList += "<tr><td><a href=\"/viewlog?payload="+FileName+"\">"+FileName+"</a></td>"+"<td>"+f.size()+"</td><td><a href=\""+FileName+"\"><button>Download File</button></td><td><a href=\"/deletelog?payload="+FileName+"\"><button>Delete File</button></td></tr>";
+    f.close();
   }
   FileList += "</table>";
   server.send(200, "text/html", FileList);
@@ -1214,6 +1225,8 @@ void setup() {
       
     dataCONVERSION="";
   });
+
+  #include "api_server.h"
 
   server.on("/stoptx", [](){
     server.send(200, "text/html", F("<html><body>This will kill any ongoing transmissions.<br><br>Are you sure?<br><br><a href=\"/stoptx/yes\">YES</a> - <a href=\"/\">NO</a></body></html>"));
