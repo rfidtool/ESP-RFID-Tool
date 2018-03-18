@@ -93,7 +93,7 @@ Arduino IDE:
   * https://blog.aprbrother.com/product/esp-flasher-r4  
 * Clone/download the source.  
 * Add these libraries:  
-  * ArduinoJson library 5.11.0 by Benoit Blanchon  
+  * ArduinoJson library 5.13.1 by Benoit Blanchon  
     * https://github.com/bblanchon/ArduinoJson  
   * ESP8266FtpServer.h  
     * https://github.com/exploitagency/esp8266FTPServer/tree/feature/bbx10_speedup  
