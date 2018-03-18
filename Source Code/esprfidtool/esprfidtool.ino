@@ -384,7 +384,7 @@ void LogWiegand(WiegandNG &tempwg) {
 
   File f = SPIFFS.open("/"+String(logname), "a"); //Open the log in append mode to store capture
   int preambleLen;
-  if (unknown==true && countedBits!=4 && countedBits!=248) {
+  if (unknown==true && countedBits!=4 && countedBits!=8 && countedBits!=248) {
     f.print(F("Unknown "));
     preambleLen=0;
   }
@@ -395,7 +395,7 @@ void LogWiegand(WiegandNG &tempwg) {
   f.print(String()+countedBits+F(" bit card,"));
 
   if (countedBits==4||countedBits==8) {
-    f.print(F("possible keypad entry,"));
+    f.print(F("Possible keypad entry,"));
   }
 
   if (countedBits==248) {
@@ -494,55 +494,64 @@ void LogWiegand(WiegandNG &tempwg) {
   else if (countedBits==4||countedBits==8) {
     f.print(",Keypad Code:");
     if (binChunk1 == 0B0000||binChunk1 == 0b11110000) {
-      f.println("0");
+      f.print("0");
     }
     else if (binChunk1 == 0B0001||binChunk1 == 0b11100001) {
-      f.println("1");
+      f.print("1");
     }
     else if (binChunk1 == 0B0010||binChunk1 == 0b11010010) {
-      f.println("2");
+      f.print("2");
     }
     else if (binChunk1 == 0B0011||binChunk1 == 0b11000011) {
-      f.println("3");
+      f.print("3");
     }
     else if (binChunk1 == 0B0100||binChunk1 == 0b10110100) {
-      f.println("4");
+      f.print("4");
     }
     else if (binChunk1 == 0B0101||binChunk1 == 0b10100101) {
-      f.println("5");
+      f.print("5");
     }
     else if (binChunk1 == 0B0110||binChunk1 == 0b10010110) {
-      f.println("6");
+      f.print("6");
     }
     else if (binChunk1 == 0B0111||binChunk1 == 0b10000111) {
-      f.println("7");
+      f.print("7");
     }
     else if (binChunk1 == 0B1000||binChunk1 == 0b01111000) {
-      f.println("8");
+      f.print("8");
     }
     else if (binChunk1 == 0B1001||binChunk1 == 0b01101001) {
-      f.println("9");
+      f.print("9");
     }
     else if (binChunk1 == 0B1010||binChunk1 == 0b01011010) {
-      f.println("* or A");
+      f.print("*");
     }
     else if (binChunk1 == 0B1011||binChunk1 == 0b01001011) {
-      f.println("# or B");
+      f.print("#");
     }
     else if (binChunk1 == 0b1100||binChunk1 == 0b00111100) {
-      f.println("F1 or C");
+      f.print("F1");
     }
     else if (binChunk1 == 0b1101||binChunk1 == 0b00101101) {
-      f.println("F2 or D");
+      f.print("F2");
     }
     else if (binChunk1 == 0b1110||binChunk1 == 0b00011110) {
-      f.println("F3 or E");
+      f.print("F3");
     }
     else if (binChunk1 == 0b1111||binChunk1 == 0b00001111) {
-      f.println("F4 or F");
+      f.print("F4");
     }
     else {
-      f.println("?");
+      f.print("?");
+    }
+    f.print(",HEX:");
+    if (countedBits==8) {
+      char hexCHAR[3];
+      sprintf(hexCHAR, "%02X", binChunk1);
+      f.println(hexCHAR);
+    }
+    else if (countedBits==4) {
+      f.println(binChunk1, HEX);
     }
   }
   else if (countedBits==248) {
