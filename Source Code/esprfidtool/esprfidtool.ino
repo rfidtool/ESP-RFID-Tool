@@ -529,6 +529,12 @@ void LogWiegand(WiegandNG &tempwg) {
     else if (binChunk1 == 0B1011||binChunk1 == 0b01001011) {
       f.println("#");
     }
+    else if (binChunk1 == 0b00111100) {
+      f.println("F1");
+    }
+    else if (binChunk1 == 0b00101101) {
+      f.println("F2");
+    }
     else {
       f.println("?");
     }
@@ -1277,7 +1283,25 @@ void setup() {
       digitalWrite(DATA1, HIGH);
       pinMode(DATA1,OUTPUT);
 
+      if (pinBITS==4) {
+        pinHTML.replace("F1","");
+        pinHTML.replace("F2","");
+        pinHTML.replace("F","");
+      }
+      if (pinBITS==8) {
+        pinHTML.replace("F1","X");
+        pinHTML.replace("F2","Y");
+        pinHTML.replace("F","");
+        pinHTML.replace("X","(F1)");
+        pinHTML.replace("Y","(F2)");
+      }
+
       experimentalStatus=String()+"Transmitting "+pinBITS+"bit Wiegand Format PIN: "+pinHTML+" with a "+pinHTMLDELAY+"ms delay between \"keypresses\"";
+
+      if (pinBITS==8) {
+        pinHTML.replace("(F1)","X");
+        pinHTML.replace("(F2)","Y");
+      }
       
       int bruteSTART;
       int bruteEND;
@@ -1304,9 +1328,29 @@ void setup() {
       String bruteENDchar="";
       if (server.hasArg("bruteSTARTchar")&&(server.arg("bruteSTARTchar")!="")) {
         bruteSTARTchar=(server.arg("bruteSTARTchar"));
+        if (pinBITS==4) { 
+          bruteSTARTchar.replace("F1",""); 
+          bruteSTARTchar.replace("F2",""); 
+          bruteSTARTchar.replace("F",""); 
+        } 
+        if (pinBITS==8) { 
+          bruteSTARTchar.replace("F1","X"); 
+          bruteSTARTchar.replace("F2","Y"); 
+          bruteSTARTchar.replace("F","");  
+        }
       }
       if (server.hasArg("bruteENDchar")&&(server.arg("bruteENDchar")!="")) {
         bruteENDchar=(server.arg("bruteENDchar"));
+        if (pinBITS==4) { 
+          bruteENDchar.replace("F1",""); 
+          bruteENDchar.replace("F2",""); 
+          bruteENDchar.replace("F",""); 
+        } 
+        if (pinBITS==8) { 
+          bruteENDchar.replace("F1","X"); 
+          bruteENDchar.replace("F2","Y"); 
+          bruteENDchar.replace("F","");  
+        }
       }
 
       unsigned long bruteFAILdelay=0;
@@ -1434,6 +1478,16 @@ void setup() {
             }
             else if (pinBITS==8) {
               pinSEND(pinHTMLDELAY,"01001011");
+            }
+          }
+          else if (pinHTML.charAt(i) == 'X') { //F1
+            if (pinBITS==8) {
+              pinSEND(pinHTMLDELAY,"00111100");
+            }
+          }
+          else if (pinHTML.charAt(i) == 'Y') { //F2
+            if (pinBITS==8) {
+              pinSEND(pinHTMLDELAY,"00101101");
             }
           }
         }
@@ -1671,7 +1725,11 @@ void setup() {
     if (TXstatus==1) {
       
       if (pinHTML!="") {
-        activeTX="Brute forcing PIN: "+pinHTML+"<br><a href=\"/stoptx\"><button>STOP CURRENT TRANSMISSION</button></a>";
+        String currentPIN=pinHTML;
+        currentPIN.replace("X","(F1)");
+        currentPIN.replace("Y","(F2)");
+        activeTX="Brute forcing PIN: "+currentPIN+"<br><a href=\"/stoptx\"><button>STOP CURRENT TRANSMISSION</button></a>";
+        currentPIN="";
       }
       else if (dos==1) {
         activeTX="Denial of Service mode active...<br><a href=\"/stoptx\"><button>STOP CURRENT TRANSMISSION</button></a>";
@@ -1719,8 +1777,8 @@ void setup() {
       "<br>"
       "<FORM action=\"/experimental\" id=\"transmitpin\" method=\"post\">"
       "<b>Transmit PIN:</b><br>"
-      "<small>Allowable character set(1234567890*#)</small><br>"
-      "<small>PIN: </small><INPUT form=\"transmitpin\" type=\"text\" name=\"pinHTML\" value=\"\" pattern=\"[0-9*#]{1,}\" required title=\"Allowable character set(1234567890*#), must not be empty\" minlength=\"1\" size=\"52\"><br>"
+      "<small>Allowable keys 0-9, * , #, F1(8bit-only), F2(8bit-only)</small><br>"
+      "<small>PIN: </small><INPUT form=\"transmitpin\" type=\"text\" name=\"pinHTML\" value=\"\" pattern=\"[0-9*#F]{1,}\" required title=\"Allowable keys 0-9, * , #, F1(8bit-only), F2(8bit-only), must not be empty\" minlength=\"1\" size=\"52\"><br>"
       "<small>Delay between \"keypresses\": </small><INPUT form=\"transmitpin\" type=\"number\" name=\"pinHTMLDELAY\" value=\"100\" minlength=\"1\" min=\"0\" size=\"8\"><small>ms</small><br>"
       "<INPUT form=\"transmitpin\" type=\"radio\" name=\"pinBITS\" id=\"pinBITS\" value=\"4\" checked required> <small>4bit Wiegand PIN Format</small>   "
       "<INPUT form=\"transmitpin\" type=\"radio\" name=\"pinBITS\" id=\"pinBITS\" value=\"8\" required> <small>8bit Wiegand PIN Format</small><br>"
@@ -1733,10 +1791,10 @@ void setup() {
       "<b>Bruteforce PIN:</b><br>"
       "<small>Delay between \"keypresses\": </small><INPUT form=\"brutepin\" type=\"number\" name=\"pinHTMLDELAY\" value=\"3\" minlength=\"1\" min=\"0\" size=\"8\"><small>ms</small><br>"
       "<small>Delay between entering complete PINs: </small><INPUT form=\"brutepin\" type=\"number\" name=\"delayAFTERpin\" value=\"0\" minlength=\"1\" min=\"0\" size=\"8\"><small>ms</small><br>"
-      "<small>PIN begins with character(s): </small><INPUT form=\"brutepin\" type=\"text\" name=\"bruteSTARTchar\" value=\"\" pattern=\"[0-9*#]{0,}\" title=\"Allowable character set(1234567890*#)\" size=\"8\"><br>"
+      "<small>PIN begins with character(s): </small><INPUT form=\"brutepin\" type=\"text\" name=\"bruteSTARTchar\" value=\"\" pattern=\"[0-9*#F]{0,}\" title=\"Allowable character set(1234567890*#)\" size=\"8\"><br>"
       "<small>PIN start position: </small><INPUT form=\"brutepin\" type=\"number\" name=\"bruteSTART\" value=\"0000\" minlength=\"1\" min=\"0\" size=\"8\"><br>"
       "<small>PIN end position: </small><INPUT form=\"brutepin\" type=\"number\" name=\"bruteEND\" value=\"9999\" minlength=\"1\" min=\"0\" size=\"8\"><br>"
-      "<small>PIN ends with character(s): </small><INPUT form=\"brutepin\" type=\"text\" name=\"bruteENDchar\" value=\"#\" pattern=\"[0-9*#]{0,}\" title=\"Allowable character set(1234567890*#)\" size=\"8\"><br>"
+      "<small>PIN ends with character(s): </small><INPUT form=\"brutepin\" type=\"text\" name=\"bruteENDchar\" value=\"#\" pattern=\"[0-9*#F]{0,}\" title=\"Allowable character set(1234567890*#)\" size=\"8\"><br>"
       "<small>NOTE: The advanced timing settings listed below override the \"Delay between entering complete PINs\" setting(listed above) when the conditions listed below are met.</small><br>"
       "<small>Number of failed PIN attempts(X) before a delay: </small><INPUT form=\"brutepin\" type=\"number\" name=\"bruteFAILSmax\" value=\"0\" minlength=\"1\" min=\"0\" size=\"8\"><br>"
       "<small>Delay in seconds(Y) after [X] failed PINs: </small><INPUT form=\"brutepin\" type=\"number\" name=\"bruteFAILdelay\" value=\"0\" minlength=\"1\" min=\"0\" size=\"8\"><small>s</small><br>"
