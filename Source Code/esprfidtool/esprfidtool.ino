@@ -1163,7 +1163,7 @@ void setup() {
         hexTEMP+=hexCHAR;
       }
 
-      dataCONVERSION+=String()+F("Hexidecimal: ")+hexTEMP+F("<br><small>You may want to drop the leading zero(if there is one) and if your cloning software does not handle it for you.</small><br><br>");
+      dataCONVERSION+=String()+F("Hexadecimal: ")+hexTEMP+F("<br><small>You may want to drop the leading zero(if there is one) and if your cloning software does not handle it for you.</small><br><br>");
       hexTEMP="";
       
       dataCONVERSION+=F("<br><br>");
@@ -1177,7 +1177,7 @@ void setup() {
       char hex2binCHAR[hex2binBUFFlen];
       (server.arg("hex2binHTML")).toCharArray(hex2binCHAR,hex2binBUFFlen);
 
-      dataCONVERSION+=String()+F("Hexidecimal: ")+hex2binCHAR+F("<br><br>");
+      dataCONVERSION+=String()+F("Hexadecimal: ")+hex2binCHAR+F("<br><br>");
 
       String binTEMP="";
 
@@ -1245,14 +1245,14 @@ void setup() {
       "</FORM>"
       "<br>"
       "<FORM action=\"/data-convert\" id=\"bin2hex\" method=\"post\">"
-      "<b>Convert Binary Data to Hexidecimal:</b><br>"
+      "<b>Convert Binary Data to Hexadecimal:</b><br>"
       "<small>For use with card cloning, typically includes both the preamble and card data(binary before and after the space in log).</small><br>"
       "<INPUT form=\"bin2hex\" type=\"text\" name=\"bin2hexHTML\" value=\"\" pattern=\"[0-1]{1,}\" required title=\"Only 0's & 1's allowed, no spaces allowed, must not be empty\" minlength=\"1\" size=\"52\"><br>"
       "<INPUT form=\"bin2hex\" type=\"submit\" value=\"Convert\"><br>"
       "</FORM>"
       "<br>"
       "<FORM action=\"/data-convert\" id=\"hex2bin\" method=\"post\">"
-      "<b>Convert Hexidecimal Data to Binary:</b><br>"
+      "<b>Convert Hexadecimal Data to Binary:</b><br>"
       "<small>In some situations you may want to add a leading zero to pad the output to come up with the correct number of bits.</small><br>"
       "<INPUT form=\"hex2bin\" type=\"text\" name=\"hex2binHTML\" value=\"\" pattern=\"[0-9a-fA-F]{1,}\" required title=\"Only characters 0-9 A-F a-f allowed, no spaces allowed, must not be empty\" minlength=\"1\" size=\"52\"><br>"
       "<INPUT form=\"hex2bin\" type=\"submit\" value=\"Convert\"><br>"

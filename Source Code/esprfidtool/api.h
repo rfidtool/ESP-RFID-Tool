@@ -133,7 +133,7 @@ void apilog(String logfile,int prettify) {
           int hsecondIndex = line.indexOf(",", hfirstIndex + 1);
           String hexCURRENT=line.substring(hfirstIndex+5, hsecondIndex);
           hexCURRENT.replace("\r","");
-          apiCURRENTcaptureOBJECT["Hexidecimal"]=hexCURRENT;
+          apiCURRENTcaptureOBJECT["Hexadecimal"]=hexCURRENT;
         }
         if(line.indexOf(",Keypad Code:") > 0) {
           int kfirstIndex = line.indexOf(",Keypad Code:");
