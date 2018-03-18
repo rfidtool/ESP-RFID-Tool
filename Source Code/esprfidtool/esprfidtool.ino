@@ -41,6 +41,9 @@
 #include <DNSServer.h>
 #include <ESP8266mDNS.h>
 
+#define DATA0 14
+#define DATA1 12
+
 #define LED_BUILTIN 2
 #define RESTORE_DEFAULTS_PIN 4 //GPIO 4
 int jumperState = 0; //For restoring default settings
@@ -74,7 +77,8 @@ char ftp_password[64];
 int ftpenabled;
 int ledenabled;
 char logname[31];
-int bufferlength;
+unsigned int bufferlength;
+unsigned int rxpacketgap;
 int txdelayus;
 int txdelayms;
 int safemode;
@@ -96,7 +100,7 @@ void LogWiegand(WiegandNG &tempwg) {
 
   unsigned int countedBytes = (countedBits/8);
   if ((countedBits % 8)>0) countedBytes++;
-  unsigned int bitsUsed = countedBytes * 8;
+  //unsigned int bitsUsed = countedBytes * 8;
 
   bool binChunk2exists=false;
   volatile unsigned long cardChunk1 = 0;
@@ -109,7 +113,7 @@ void LogWiegand(WiegandNG &tempwg) {
   int binChunk2len=0;
   int j=0;
   
-  for (int i=bufferSize-countedBytes; i< bufferSize;i++) {
+  for (unsigned int i=bufferSize-countedBytes; i< bufferSize;i++) {
     unsigned char bufByte=buffer[i];
     for(int x=0; x<8;x++) {
       if ( (((bufferSize-i) *8)-x) <= countedBits) {
@@ -713,7 +717,8 @@ void settingsPage()
   "<small>Default Buffer Length is 256 bits with an allowed range of 52-4096 bits."
   "<br>Default Experimental TX mode timing is 40us Wiegand Data Pulse Width and a 2ms Wiegand Data Interval with an allowed range of 0-1000."
   "<br>Changing these settings may result in unstable performance.</small><br>"
-  "Wiegand Buffer Length: <input type=\"number\" name=\"bufferlength\" value=\"")+bufferlength+F("\" maxlength=\"30\" size=\"31\" min=\"52\" max=\"4096\"> bit(s)<br>"
+  "Wiegand RX Buffer Length: <input type=\"number\" name=\"bufferlength\" value=\"")+bufferlength+F("\" maxlength=\"30\" size=\"31\" min=\"52\" max=\"4096\"> bit(s)<br>"
+  "Wiegand RX Packet Length: <input type=\"number\" name=\"rxpacketgap\" value=\"")+rxpacketgap+F("\" maxlength=\"30\" size=\"31\" min=\"1\" max=\"4096\"> millisecond(s)<br>"
   "Experimental TX Wiegand Data Pulse Width: <input type=\"number\" name=\"txdelayus\" value=\"")+txdelayus+F("\" maxlength=\"30\" size=\"31\" min=\"0\" max=\"1000\"> microsecond(s)<br>"
   "Experimental TX Wiegand Data Interval: <input type=\"number\" name=\"txdelayms\" value=\"")+txdelayms+F("\" maxlength=\"30\" size=\"31\" min=\"0\" max=\"1000\"> millisecond(s)<br>"
   "<hr>"
@@ -773,6 +778,7 @@ void handleSubmitSettings()
   ledenabled = server.arg("ledenabled").toInt();
   server.arg("logname").toCharArray(logname, 31);
   bufferlength = server.arg("bufferlength").toInt();
+  rxpacketgap = server.arg("rxpacketgap").toInt();
   txdelayus = server.arg("txdelayus").toInt();
   txdelayms = server.arg("txdelayms").toInt();
   safemode = server.arg("safemode").toInt();
@@ -811,6 +817,7 @@ bool loadDefaults() {
   json["ledenabled"] = "1";
   json["logname"] = "log.txt";
   json["bufferlength"] = "256";
+  json["rxpacketgap"] = "15";
   json["txdelayus"] = "40";
   json["txdelayms"] = "2";
   json["safemode"] = "0";
@@ -866,6 +873,7 @@ bool loadConfig() {
   ledenabled = json["ledenabled"];
   strcpy(logname, (const char*)json["logname"]);
   bufferlength = json["bufferlength"];
+  rxpacketgap = json["rxpacketgap"];
   txdelayus = json["txdelayus"];
   txdelayms = json["txdelayms"];
   safemode = json["safemode"];
@@ -948,6 +956,7 @@ bool saveConfig() {
   json["ledenabled"] = ledenabled;
   json["logname"] = logname;
   json["bufferlength"] = bufferlength;
+  json["rxpacketgap"] = rxpacketgap;
   json["txdelayus"] = txdelayus;
   json["txdelayms"] = txdelayms;
   json["safemode"] = safemode;
@@ -1033,7 +1042,7 @@ void setup() {
   
   loadConfig();
 
-  if(!wg.begin(bufferlength)) {       
+  if(!wg.begin(DATA0,DATA1,bufferlength,rxpacketgap)) {       
     Serial.println(F("Could not begin Wiegand logging,"));            
     Serial.println(F("Out of memory!"));
   }
