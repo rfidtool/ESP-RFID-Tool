@@ -1,4 +1,4 @@
-void apiTX(String apiBIN, int apitxdelayus, int apitxdelayms) {
+void apiTX(String apiBIN, int apitxdelayus, int apitxdelayms, int wait) {
   wg.pause();
   digitalWrite(DATA0, HIGH);
   pinMode(DATA0,OUTPUT);
@@ -15,7 +15,12 @@ void apiTX(String apiBIN, int apitxdelayus, int apitxdelayms) {
       delayMicroseconds(apitxdelayus);
       digitalWrite(DATA1, HIGH);
     }
-    delay(apitxdelayms);
+    if (apiBIN.charAt(i) == ',') {
+      delayMicroseconds(wait);
+    }
+    else {
+      delay(apitxdelayms);
+    }
   }
   yield();
   apiBIN="";
