@@ -1,3 +1,29 @@
+void apiTX(String apiBIN, int apitxdelayus, int apitxdelayms) {
+  wg.pause();
+  digitalWrite(DATA0, HIGH);
+  pinMode(DATA0,OUTPUT);
+  digitalWrite(DATA1, HIGH);
+  pinMode(DATA1,OUTPUT);
+  for (int i=0; i<=apiBIN.length(); i++) {
+    if (apiBIN.charAt(i) == '0') {
+      digitalWrite(DATA0, LOW);
+      delayMicroseconds(apitxdelayus);
+      digitalWrite(DATA0, HIGH);
+    }
+    else if (apiBIN.charAt(i) == '1') {
+      digitalWrite(DATA1, LOW);
+      delayMicroseconds(apitxdelayus);
+      digitalWrite(DATA1, HIGH);
+    }
+    delay(apitxdelayms);
+  }
+  yield();
+  apiBIN="";
+  pinMode(DATA0, INPUT);
+  pinMode(DATA1, INPUT);
+  wg.clear();
+}
+
 void apiinfo(int prettify) {
 
   FSInfo fs_info;

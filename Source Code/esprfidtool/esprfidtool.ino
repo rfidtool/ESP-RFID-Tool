@@ -59,8 +59,6 @@ DNSServer dnsServer;
 
 HTTPClient http;
 
-#include "api.h"
-
 const char* update_path = "/update";
 int accesspointmode;
 char ssid[32];
@@ -603,6 +601,8 @@ void LogWiegand(WiegandNG &tempwg) {
 
   f.close(); //done
 }
+
+#include "api.h"
 
 void settingsPage()
 {
