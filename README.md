@@ -83,12 +83,12 @@ The device was made with minimal hardware to keep costs extremely low and in rea
 [Magstripe/ABA Format](Magstripe/README.md)  
   
 ## Flashing Firmware  
-From Web Interface:  
+OPTION 1: OTA via the Web Interface:  
 * Download one of the latest releases from  
   * https://github.com/rfidtool/ESP-RFID-Tool/releases  
 * Login to the device's admin panel and upgrade the firmware.  
   
-Arduino IDE:  
+OPTION 2: Arduino IDE:  
 * Use the ESP Flasher R4 by April Brother:  
   * https://blog.aprbrother.com/product/esp-flasher-r4  
 * Clone/download the source.  
