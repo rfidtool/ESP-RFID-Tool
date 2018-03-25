@@ -1015,7 +1015,29 @@ void ViewLog(){
   File f = SPIFFS.open(payload, "r");
   String webString = f.readString();
   f.close();
-  ShowPL = String()+F("<html><head></head><body><a href=\"/\"><- BACK TO INDEX</a><br><br><a href=\"/logs\">List Exfiltrated Data</a> - <a href=\"/experimental\">Experimental TX Mode</a> - <a href=\"/data-convert\">Data Conversion Tools</a><br><br><a href=\"")+payload+"\"><button>Download File</button><a> - <a href=\"/deletelog?payload="+payload+"\"><button>Delete File</button></a><br><br><small>Note: Preambles shown are only a guess based on card length and may not be accurate for every card format.</small><br><pre>"+payload+"\n-----\n"+webString+"</pre></body></html>";
+  ShowPL = String()+F(
+    "<html><head></head><body>"
+    "<a href=\"/\"><- BACK TO INDEX</a><br><br>"
+    "<a href=\"/logs\">List Exfiltrated Data</a> - <a href=\"/experimental\">Experimental TX Mode</a> - <a href=\"/data-convert\">Data Conversion Tools</a><br><br>"
+    "<FORM action=\"/api/tx/bin\" id=\"api_tx\" method=\"get\"  target=\"_blank\">"
+      "<small>Binary: </small><INPUT form=\"api_tx\" type=\"text\" name=\"binary\" value=\"\" pattern=\"[01,]{1,}\" required title=\"Allowed characters(0,1,\",\"), must not be empty\" minlength=\"1\" size=\"52\"> "
+      "<INPUT form=\"api_tx\" type=\"submit\" value=\"Transmit\"><br>"
+      "<small>Pulse Width: </small><INPUT form=\"api_tx\" type=\"number\" name=\"pulsewidth\" value=\"40\" minlength=\"1\" min=\"0\" size=\"8\"><small>us</small> "
+      "<small>Data Interval: </small><INPUT form=\"api_tx\" type=\"number\" name=\"interval\" value=\"2000\" minlength=\"1\" min=\"0\" size=\"8\"><small>us</small> "
+      "<small>Delay Between Packets: </small><INPUT form=\"api_tx\" type=\"number\" name=\"wait\" value=\"100000\" minlength=\"1\" min=\"0\" size=\"8\"><small>us</small><br>"
+      "<INPUT form=\"api_tx\" type=\"hidden\" name=\"prettify\" id=\"prettify\" value=\"1\">"
+    "</FORM>"
+    "<small>Use commas to separate the binary for transmitting multiple packets(useful for sending multiple keypresses for imitating keypads)</small><br>"
+    "<hr>"
+    "<a href=\"")+payload+F("\"><button>Download File</button><a><small> - </small><a href=\"/deletelog?payload=")+payload+F("\"><button>Delete File</button></a>"
+    "<pre>")
+    +payload+
+    F("\n"
+    "Note: Preambles shown are only a guess based on card length and may not be accurate for every card format.\n"
+    "-----\n")
+    +webString+
+    F("</pre></body></html>")
+    ;
   webString="";
   server.send(200, "text/html", ShowPL);
 }
