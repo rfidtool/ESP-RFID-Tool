@@ -37,9 +37,11 @@
 #include <ESP8266mDNS.h>
 #include <FS.h>
 #include <ArduinoJson.h> // ArduinoJson library 5.11.0 by Benoit Blanchon https://github.com/bblanchon/ArduinoJson
-#include <ESP8266FtpServer.h> // https://github.com/exploitagency/esp8266FTPServer/tree/feature/bbx10_speedup
+//#include <ESP8266FtpServer.h> // https://github.com/exploitagency/esp8266FTPServer/tree/feature/bbx10_speedup
 #include <DNSServer.h>
 #include <ESP8266mDNS.h>
+#include <TimeLib.h>
+
 
 #define DATA0 14
 #define DATA1 12
@@ -53,7 +55,7 @@ int jumperState = 0; //For restoring default settings
 ESP8266WebServer server(80);
 ESP8266WebServer httpServer(1337);
 ESP8266HTTPUpdateServer httpUpdater;
-FtpServer ftpSrv;
+//FtpServer ftpSrv;
 const byte DNS_PORT = 53;
 DNSServer dnsServer;
 
@@ -680,6 +682,34 @@ void settingsPage()
   "<b>WiFi Configuration:</b><br><br>"
   "<b>Network Type</b><br>"
   )+
+  F(
+  "<hr>"
+  "<b>Set time:</b><br><br>"
+  
+  
+  "<script>"
+  "var curday = function(sp){"
+  " today = new Date();"
+  " var dd = today.getDate();"
+  " var mm_number = today.getMonth()+1;" //As January is 0.
+  " var mm = today.toLocaleString('en-us', { month: 'long' });"
+  " var yyyy = today.getFullYear();"
+  " var hours = today.getHours();"
+  " var minutes = today.getMinutes();"
+  " var seconds = today.getSeconds();"
+  ""
+  " if(dd<10) dd='0'+dd;"
+  " if(mm<10) mm='0'+mm;"
+  " document.write( \"<a href=\"/mysettime\"><button>Set time</button></a>\");"
+  " return (mm+sp+dd+sp+yyyy+\"  \"+hours+\":\"+minutes+\":\"+seconds);"
+  "};"
+
+  "document.write(curday('/'));"
+  
+  
+  "</script>"
+  ""
+  )+
   F("Access Point Mode: <INPUT type=\"radio\" name=\"accesspointmode\" value=\"1\"")+accesspointmodeyes+F("><br>"
   "Join Existing Network: <INPUT type=\"radio\" name=\"accesspointmode\" value=\"0\"")+accesspointmodeno+F("><br><br>"
   "<b>Hidden<br></b>"
@@ -1007,6 +1037,18 @@ bool RawFile(String rawfile) {
   return false;
 }
 
+/* Set the time so we can print it in the log and track users office time schedules*/
+void mysettime(){
+  int h = server.arg("hour").toInt();
+  int m = server.arg("minute").toInt();
+  int s = server.arg("second").toInt();
+  int y = server.arg("year").toInt();
+  int M = server.arg("month").toInt();
+  int d = server.arg("day").toInt();
+
+  setTime(h, m, s, d, M, y);
+}
+
 void ViewLog(){
   webString="";
   String payload;
@@ -1126,6 +1168,8 @@ void setup() {
     deletelog += server.arg(0);
     server.send(200, "text/html", String()+F("<html><body>This will delete the file: ")+deletelog+F(".<br><br>Are you sure?<br><br><a href=\"/deletelog/yes?payload=")+deletelog+F("\">YES</a> - <a href=\"/\">NO</a></body></html>"));
   });
+
+  server.on("/settime", mysettime);
 
   server.on("/viewlog", ViewLog);
 
@@ -1913,9 +1957,9 @@ void setup() {
 
   MDNS.addService("http", "tcp", 1337);
   
-  if (ftpenabled==1){
-    ftpSrv.begin(String(ftp_username),String(ftp_password));
-  }
+//  if (ftpenabled==1){
+//    ftpSrv.begin(String(ftp_username),String(ftp_password));
+//  }
 
 //Start RFID Reader
   pinMode(LED_BUILTIN, OUTPUT);  // LED
@@ -1935,9 +1979,9 @@ void setup() {
 // LOOP function
 void loop()
 {
-  if (ftpenabled==1){
-    ftpSrv.handleFTP();
-  }
+//  if (ftpenabled==1){
+//    ftpSrv.handleFTP();
+//  }
   server.handleClient();
   httpServer.handleClient();
   while (Serial.available()) {
