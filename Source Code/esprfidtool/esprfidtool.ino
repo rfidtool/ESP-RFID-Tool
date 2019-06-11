@@ -387,6 +387,10 @@ void LogWiegand(WiegandNG &tempwg) {
   }
 
   File f = SPIFFS.open("/"+String(logname), "a"); //Open the log in append mode to store capture
+  // It adds a timestamp
+  String date_time_formated = String(year()) + "-" + month() + "-" +day() + " " + hour() + ":" + minute() + ":" + second() + " ";
+  f.print(date_time_formated);
+
   int preambleLen;
   if (unknown==true && countedBits!=4 && countedBits!=8 && countedBits!=248) {
     f.print(F("Unknown "));
@@ -412,7 +416,7 @@ void LogWiegand(WiegandNG &tempwg) {
   }
   
   f.print(F("Binary:"));
-
+  
   //f.print(" ");  //debug line
   if (binChunk2exists==true && unknown!=true) {
     for(int i = (((countedBits+preambleLen)-countedBits)+(countedBits-24)); i--;) {
@@ -493,7 +497,11 @@ void LogWiegand(WiegandNG &tempwg) {
       f.print(cardChunk1, HEX);
     }
     //f.print(" "); //debug line
-    f.println(cardChunk2, HEX);
+//    f.print(cardChunk2, HEX);
+//    f.print(",Facility:")
+//    f.print((cardChunk2 & 0xFFFFFFF) >> 19);
+//    f.print(",CardCode:")
+//    f.println((cardChunk2 & 0x1fffe) >> 1);
   }
   else if (countedBits==4||countedBits==8) {
     f.print(",Keypad Code:");
@@ -660,6 +668,9 @@ void settingsPage()
     safemodeyes="";
     safemodeno=" checked=\"checked\"";
   }
+  time_t t = now();
+  String date_time_formated = String(year(t)) + "-" + month(t) + "-" +day(t) + " " + hour(t) + ":" + minute(t) + ":" +second(t);
+
   server.send(200, "text/html", 
   String()+
   F(
@@ -681,34 +692,26 @@ void settingsPage()
   "<P>"
   "<b>WiFi Configuration:</b><br><br>"
   "<b>Network Type</b><br>"
-  )+
+  "<hr><b>Current time: </b> "
+  ) +
+  date_time_formated +
   F(
-  "<hr>"
-  "<b>Set time:</b><br><br>"
-  
-  
+  "<br>"
+  "<a href='' onclick='syncTime(); return false;'>Sync time</a>"
+  ""
   "<script>"
-  "var curday = function(sp){"
-  " today = new Date();"
-  " var dd = today.getDate();"
-  " var mm_number = today.getMonth()+1;" //As January is 0.
-  " var mm = today.toLocaleString('en-us', { month: 'long' });"
-  " var yyyy = today.getFullYear();"
-  " var hours = today.getHours();"
-  " var minutes = today.getMinutes();"
-  " var seconds = today.getSeconds();"
-  ""
-  " if(dd<10) dd='0'+dd;"
-  " if(mm<10) mm='0'+mm;"
-  " document.write( \"<a href=\"/mysettime\"><button>Set time</button></a>\");"
-  " return (mm+sp+dd+sp+yyyy+\"  \"+hours+\":\"+minutes+\":\"+seconds);"
+  "function syncTime(){"
+  "   today = new Date();"
+  "   var day = today.getDate();"
+  "   var month = today.getMonth()+1;"
+  "   var year = today.getFullYear();"
+  "   var hour = today.getHours();"
+  "   var minute = today.getMinutes();"
+  "   var second = today.getSeconds();"
+  "   document.location.href = `./settime?year=${year}&month=${month}&day=${day}&hour=${hour}&minute=${minute}&second=${second}`;"
   "};"
-
-  "document.write(curday('/'));"
-  
-  
-  "</script>"
   ""
+  "</script><hr>"
   )+
   F("Access Point Mode: <INPUT type=\"radio\" name=\"accesspointmode\" value=\"1\"")+accesspointmodeyes+F("><br>"
   "Join Existing Network: <INPUT type=\"radio\" name=\"accesspointmode\" value=\"0\"")+accesspointmodeno+F("><br><br>"
@@ -852,10 +855,14 @@ bool loadDefaults() {
   json["txdelayms"] = "2";
   json["safemode"] = "0";
   File configFile = SPIFFS.open("/esprfidtool.json", "w");
+  if (!configFile ) {
+    Serial.println(F("File creation failed! Is flash memory enabled?"));
+   }
   json.printTo(configFile);
   configFile.close();
   jsonBuffer.clear();
   loadConfig();
+  return true;
 }
 
 bool loadConfig() {
@@ -935,7 +942,8 @@ bool loadConfig() {
 //    Serial.print("Starting Access Point ... ");
 //    Serial.println(WiFi.softAP(ssid, password, channel, hidden) ? "Success" : "Failed!");
     WiFi.softAP(ssid, password, channel, hidden);
-
+    Serial.println("Wait 100 ms for AP_START...");
+    delay(100);
 //    Serial.print("Setting up Network Configuration ... ");
 //    Serial.println(WiFi.softAPConfig(local_IP, gateway, subnet) ? "Success" : "Failed!");
     WiFi.softAPConfig(local_IP, gateway, subnet);
@@ -1025,6 +1033,63 @@ void ListLogs(){
   server.send(200, "text/html", FileList);
 }
 
+// It reads a line from a file, max size including terminating string
+int readLine(File f, char *line, size_t maxsize) {
+  int index = 0;
+  while (f.available()) {
+    line[index] = f.read();
+    // We just ignored \r
+    if (line[index] == '\r') {
+      index++;
+      continue;
+    }
+    if (line[index] == '\n') {
+        line[index] = '\0';
+        return index;
+    }
+    index++;
+    if (index == maxsize - 1) {
+      line[index] = '\0';
+      return index;
+    }
+  }  
+  return -1;
+}
+
+
+//This function returns an HTML select item with the unique card numbers to be shown in the replay (TX Mode) menu
+String ListCards(){
+  String html;
+  html += F("<select form='transmitbinary' name='binHTML'>\n");
+  Dir dir = SPIFFS.openDir("/");
+  while (dir.next()) {
+    String FileName = dir.fileName();
+    Serial.println(FileName);
+    if(!FileName.startsWith("/payloads/") && !FileName.startsWith("/esploit.json") && !FileName.startsWith("/esportal.json") && !FileName.startsWith("/esprfidtool.json") && !FileName.startsWith("/config.json")) {
+      File f = dir.openFile("r");
+      char line[120];
+      int n;
+      while ((n = readLine(f, line, sizeof(line))) != -1) {
+        char *binary = strstr (line, "Binary:");
+        if (binary != 0) {
+          binary = strstr (binary, " ");
+          binary += 1;
+          char *binary_end = strstr (binary, ",");
+          *binary_end = '\0';
+          //If it's already on the list, ignore
+          if (html.indexOf(binary) != -1)
+            continue;
+          char *hex = strstr(line, "HEX:");
+          html = html + F("<option value='") + binary +"'>" + hex + "(" + binary + ")" + F("</option>\n");
+        }
+      }
+      f.close();
+    }
+  }
+  html += "</select>";
+  return html;
+}
+
 bool RawFile(String rawfile) {
   if (SPIFFS.exists(rawfile)) {
     if(!server.authenticate(update_username, update_password)){
@@ -1039,14 +1104,17 @@ bool RawFile(String rawfile) {
 
 /* Set the time so we can print it in the log and track users office time schedules*/
 void mysettime(){
-  int h = server.arg("hour").toInt();
-  int m = server.arg("minute").toInt();
-  int s = server.arg("second").toInt();
-  int y = server.arg("year").toInt();
-  int M = server.arg("month").toInt();
-  int d = server.arg("day").toInt();
-
-  setTime(h, m, s, d, M, y);
+  if (server.hasArg("hour") && server.hasArg("minute") && server.hasArg("second") && server.hasArg("year") && server.hasArg("month") && server.hasArg("day")) {
+    int h = server.arg("hour").toInt();
+    int m = server.arg("minute").toInt();
+    int s = server.arg("second").toInt();
+    int y = server.arg("year").toInt();
+    int M = server.arg("month").toInt();
+    int d = server.arg("day").toInt();
+    
+    setTime(h, m, s, d, M, y);
+    server.send(200, "text/html", String()+F("<a href=\"/\"><- BACK TO INDEX</a><br><br>Time synchronized!"));
+  }  
 }
 
 void ViewLog(){
@@ -1087,13 +1155,14 @@ void ViewLog(){
 // Start Networking
 void setup() {
   Serial.begin(9600);
+  delay(1000);
   Serial.println(F("....."));
   Serial.println(String()+F("ESP-RFID-Tool v")+version);
   //SPIFFS.format();
   
   SPIFFS.begin();
-  
- //loadDefaults(); //uncomment to restore default settings if double reset fails for some reason
+
+  //loadDefaults(); //uncomment to restore default settings if double reset fails for some reason
 
 //Jump RESTORE_DEFAULTS_PIN to GND while powering on device to reset the device to factory defaults
   pinMode(RESTORE_DEFAULTS_PIN, INPUT_PULLUP);
@@ -1103,13 +1172,13 @@ void setup() {
     Serial.println(F("Loading default config..."));
     loadDefaults();
   }
-  
+
   loadConfig();
 
-  if(!wg.begin(DATA0,DATA1,bufferlength,rxpacketgap)) {       
-    Serial.println(F("Could not begin Wiegand logging,"));            
-    Serial.println(F("Out of memory!"));
-  }
+ if(!wg.begin(DATA0,DATA1,bufferlength,rxpacketgap)) {       
+   Serial.println(F("Could not begin Wiegand logging,"));            
+   Serial.println(F("Out of memory!"));
+ }
 
 //Set up Web Pages
   server.on("/",[]() {
@@ -1855,9 +1924,10 @@ void setup() {
       "<br>"
       "<FORM action=\"/experimental\" id=\"transmitbinary\" method=\"post\">"
       "<b>Binary Data:</b><br>"
-      "<small>Typically no need to include preamble</small><br>"
-      "<INPUT form=\"transmitbinary\" type=\"text\" name=\"binHTML\" value=\"\" pattern=\"[0-1]{1,}\" required title=\"Only 0's & 1's allowed, must not be empty\" minlength=\"1\" size=\"52\"><br>"
-      "<INPUT form=\"transmitbinary\" type=\"submit\" value=\"Transmit\"><br>"
+      "<small>Typically no need to include preamble</small><br>")+
+      ListCards() +
+      //"<INPUT form=\"transmitbinary\" type=\"text\" name=\"binHTML\" value=\"\" pattern=\"[0-1]{1,}\" required title=\"Only 0's & 1's allowed, must not be empty\" minlength=\"1\" size=\"52\"><br>"
+      F("<INPUT form=\"transmitbinary\" type=\"submit\" value=\"Transmit\"><br>"
       "</FORM>"
       "<br>"
       "<hr>"
