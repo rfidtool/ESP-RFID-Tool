@@ -499,7 +499,7 @@ void LogWiegand(WiegandNG &tempwg) {
     //f.print(" "); //debug line
 //    f.print(cardChunk2, HEX);
 //    f.print(",Facility:")
-//    f.print((cardChunk2 & 0xFFFFFFF) >> 19);
+//    f.print((cardChunk2 & 0x1fe0000) >> 17);
 //    f.print(",CardCode:")
 //    f.println((cardChunk2 & 0x1fffe) >> 1);
   }
