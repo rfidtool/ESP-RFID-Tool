@@ -7,11 +7,10 @@ Official website:
 * www.rfid-tool.com  
   
 ![Board](Images/board.jpg?raw=true)  
-Hardware is manufactured by April Brother and can be purchased direct from China for ~$20.00 from their  
+April Brother is currently manufacturing this hardware and it can be purchased direct from China from their  
 * Official Store: https://blog.aprbrother.com/product/esp-rfid-tool  
 * AliExpress Store: https://www.aliexpress.com/item/ESP-RFID-Tool/32850151497.html  
-* Tindie Store: https://www.tindie.com/products/aprbrother/esp-rfid-tool/  
-* eBay Store: https://www.ebay.com/itm/ESP-RFID-Tool-for-logging-Wiegand-data/253417849827  
+* Tindie Store: https://www.tindie.com/products/aprbrother/esp-rfid-tool/    
   
 Third Party Distributors:  
 * Hacker Warehouse(USA): https://hackerwarehouse.com/product/esp-rfid-tool/  
@@ -47,12 +46,13 @@ Firmware:  
 * Useful for merchants or surplus resellers who are testing if access control equipment is functional.  
 * Hobbyist experimenting with various systems that utilize a Wiegand Interface.  
 * Simulating an access control system using multiple units of ESP-RFID-Tool.  
+* RFID-Tool is not intended to be used in any unlawful manner.  
   
 ## What is it?  
 A universal data logger that captures the raw binary data from a standard 5V Wiegand Interface. The device is capable of logging the credentials for access control systems or nearly any device that utilizes a Wiegand Interface such as RFID card readers, pin pads, magnetic stripe systems, barcode, and even some biometric readers. Wiegand Interfaces also do not have to be limited to just access control systems. The main target group for this device is 26-37bit HID cards.  For known card types both the binary and hexadecimal data is displayed directly in the log file for easy badge identification and also in case a clone of a card may be needed. For unknown card types only the raw binary data is shown.  
   
 ## How do you install it?  
-The device may be installed directly into an existing system drawing its power from the preexisting wiring or it can also be used to turn a reader into a standalone portable unit for data logging when a battery is added. Wiring is simple and consists of 4 wires, (+), (-), D0(Green), and D1(White). The device is capable of operating on voltages ranging from around 4.5V up to a maximum of 18V. Commonly found voltages are 12V and 5V. **(See Installation Notes Below)  
+The device may be installed directly into an existing system drawing its power from the preexisting wiring or it can also be used to turn a reader into a standalone portable unit for data logging when a battery is added. Wiring is simple and consists of 4 wires, (+), (-), D0(Green), and D1(White). The device is capable of operating on voltages ranging from around 4.5V up to a maximum of 12v. Commonly found voltages are 12V and 5V. **(See Installation Notes Below)  
   
 ## How do you access the logs?  
 Access to the log files and various settings is provided via a web based interface. The device has WiFi capabilities and can be set up to spawn its own access point or set to connect to an existing network. In the event you get locked out of the web interface you can bridge the J3 jumper on power up or while resetting the device to regain access without losing your log files.  
@@ -72,8 +72,9 @@ The device was made with minimal hardware to keep costs extremely low and in rea
 * Connect D1 on device to D1 on reader  
 * Connect + on device to + on reader  
 * Connect - on device to - on reader  
-  * The ESP-RFID-Tool accepts 4.5-18V but you must also be sure to supply enough voltage and current to power your reader if creating a standalone or portable unit.  
-  * OPTIONAL: Connect 4.5-18V battery into the same + and -(only if building a portable unit, do not add a battery if implanting device into an existing installation, or if you do use a battery do not connect the + wire from the existing installation to your device, only tie in the GND -)  
+  * The ESP-RFID-Tool accepts 4.5-12v but you must also be sure to supply enough voltage and current to power your reader if creating a standalone or portable unit.  
+  * SAFETY: It has come to my attention that the voltage regulator used on the commercially available units that you may find for sale is different than the voltage regulator I originally chose for this project.  Also due to global chip shortages and the possibility of manufacturers substituting components I am downgrading the absolute maximum voltage rating to 12v as in you may be stressing the unit to its limits at this voltage and extra care should be taken.  Most of my smaller portable prototypes ran at around 9v(x6 AA Batteries) and I found this to be more than adequate, remember that you can always power your reader and the RFID-Tool unit separately if needed and I suggest supplying your project with the lowest possible voltage that you can get away with.  In fact, I have found multiple readers that run just fine at less than the recommended voltage.  Note that I did not notice a significant range increase in my original testing between supplying 12v and 24v to my reader(I do not recommend this as I tend to abuse the specs for what I am testing, and I was using a different voltage regulator in my prototype).  Also be advised that most commonly used batteries produce more than the commonly stated nominal voltage at a full charge.  It may also be a good idea to apply a heatsink to your voltage regulator especially if you notice that the unit runs hot at your chosen voltage.  It is also never recommended to leave your device unattended.  Please be safe and take all necessary safety precautions when testing your setup.  
+  * OPTIONAL: Connect 4.5-12v battery into the same + and -(only if building a portable unit, do not add a battery if implanting device into an existing installation, or if you do use a battery do not connect the + wire from the existing installation to your device, only tie in the GND -)  
   * NOTE: At a minimum D0, D1, and GND(-) must be connected to the reader for proper function, no matter the power source.  
 * Configure settings  
   * See Below  
@@ -191,7 +192,7 @@ You will need to manually reset the device upon the browser alerting you that th
 * Option 3: Connect via serial(9600 baud) and send the command "ResetDefaultConfig:" without quotes.  
   
 ## History
-I pushed the design for the original prototype to GitHub back in September 11, 2016. I was using an Adafruit Feather Huzzah running some code that I had modified. At the time no sort of Wiegand logger existed offering WiFi capabilities and providing an easy to use web interface for accessing the log files.(I could not find one so I created it) During the second evolution of the project I decided to design dedicated hardware and I lightly upgraded the software. It was open source hardware and it was out there on GitHub but still not easily available to the masses. Not everyone is confident in surface mount soldering and even for me it was time consuming assembling boards for personal use. It was then that I realized there is a need for an affordable device like mine to be mass produced so anyone that needs one can have access to it. During the third stage I redesigned both the software and the hardware and decided to contact April Brother to see about manufacturing it and selling it for a fair price. That is when ESP-RFID-Tool was born.  
+I pushed the design for the original prototype to GitHub back in September of 2016 albeit under a different repo. I was using an Adafruit Feather Huzzah running some code that I had modified porting the Tastic RFID Thief(by Fran Brown from Bishop Fox) to the ESP12S chip. At the time no sort of Wiegand logger existed offering WiFi capabilities and providing an easy to use web interface for accessing the log files.(I could not find one so I created it) During the second evolution of the project I decided to design dedicated hardware and I lightly upgraded the software. It was open source hardware and it was out there on GitHub but still not easily available to the masses. Not everyone is confident in surface mount soldering and even for me it was time consuming assembling boards for personal use. It was then that I realized there is a need for an affordable device like mine to be mass produced so anyone that has a legitimate for need one can have access to it. During the third stage I redesigned both the software and the hardware and decided to contact April Brother to see about them manufacturing it and selling it for a fair price. That is when ESP-RFID-Tool was born.  
   
 ## Licensing Information  
     
