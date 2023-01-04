@@ -21,14 +21,13 @@ server.on("/api/tx/bin", [](){
   }
 
   const size_t bufferSize = JSON_ARRAY_SIZE(4) + JSON_OBJECT_SIZE(5);
-  DynamicJsonBuffer jsonAPIbuffer(bufferSize);
-  JsonObject& apitxbin = jsonAPIbuffer.createObject();
+  DynamicJsonDocument apitxbin(bufferSize);
 
   apitxbin["Device"] = "ESP-RFID-Tool";
   apitxbin["Firmware"] = version;
   apitxbin["API"] = APIversion;
 
-  JsonObject& apitxbinary = apitxbin.createNestedObject("Transmission");
+  JsonObject apitxbinary = apitxbin.createNestedObject("Transmission");
   int commacount=0;
   for (int commalook=0; commalook<=api_binary.length(); commalook++) {
       if (api_binary.charAt(commalook)==',') {
@@ -52,14 +51,15 @@ server.on("/api/tx/bin", [](){
   else {
     String API_Response="";
     if (prettify==1) {
-      apitxbin.prettyPrintTo(API_Response);
+      serializeJsonPretty(apitxbin, API_Response);
     }
     else {
-      apitxbin.printTo(API_Response);
+      serializeJson(apitxbin, API_Response);
     }
     server.send(200, "application/json", API_Response);
     delay(50);
-    jsonAPIbuffer.clear();
+    apitxbinary.clear();
+    apitxbin.clear();
     apiTX(api_binary,api_pulsewidth,api_datainterval,api_wait);
   }
 });
