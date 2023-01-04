@@ -36,7 +36,7 @@
 #include <ESP8266HTTPUpdateServer.h>
 #include <ESP8266mDNS.h>
 #include <FS.h>
-#include <ArduinoJson.h> // ArduinoJson library 5.11.0 by Benoit Blanchon https://github.com/bblanchon/ArduinoJson
+#include <ArduinoJson.h> // ArduinoJson library 6.19.4 by Benoit Blanchon https://github.com/bblanchon/ArduinoJson
 #include <ESP8266FtpServer.h> // https://github.com/exploitagency/esp8266FTPServer/tree/feature/bbx10_speedup
 #include <DNSServer.h>
 #include <ESP8266mDNS.h>
@@ -384,6 +384,11 @@ void LogWiegand(WiegandNG &tempwg) {
       break;
   }
 
+  //This happens on boot so we filter it.
+  if(unknown && countedBits == 2) {
+    return;
+  }
+
   File f = SPIFFS.open("/"+String(logname), "a"); //Open the log in append mode to store capture
   int preambleLen;
   if (unknown==true && countedBits!=4 && countedBits!=8 && countedBits!=248) {
@@ -568,7 +573,6 @@ void LogWiegand(WiegandNG &tempwg) {
     int endSentinel=(magstripe.lastIndexOf("11111")+4);
     int magStart=0;
     int magEnd=1;
-    //f.print("<pre>");
   
     f.print(" * Trying \"Forward\" Swipe,");
     magStart=startSentinel;
@@ -579,19 +583,11 @@ void LogWiegand(WiegandNG &tempwg) {
     char magchar[249];
     magstripe.toCharArray(magchar,249);
     magstripe=String(strrev(magchar));
-    //f.println(String()+"Reverse: "+magstripe);
     magStart=magstripe.indexOf("11010");
     magEnd=(magstripe.lastIndexOf("11111")+4);
     f.println(aba2str(magstripe,magStart,magEnd,"\"Reverse\" Swipe"));
-  
-    //f.print("</pre>");
-    //f.println(String()+F(" * You can verify the data at the following URL: <a target=\"_blank\" href=\"https://www.legacysecuritygroup.com/aba-decode.php?binary=")+magstripe+F("\">https://www.legacysecuritygroup.com/aba-decode.php?binary=")+magstripe+F("</a>"));
   }
 
-//Debug
-//  f.print(F("Free heap:"));
-//  f.println(ESP.getFreeHeap(),DEC);
-  
   unknown=false;
   binChunk3="";
   binChunk2exists=false;
@@ -599,7 +595,7 @@ void LogWiegand(WiegandNG &tempwg) {
   cardChunk1 = 0; cardChunk2 = 0;
   binChunk2len=0;
 
-  f.close(); //done
+  f.close();
 }
 
 #include "api.h"
@@ -798,8 +794,7 @@ void handleSubmitSettings()
 }
 
 bool loadDefaults() {
-  StaticJsonBuffer<500> jsonBuffer;
-  JsonObject& json = jsonBuffer.createObject();
+  StaticJsonDocument<500> json;
   json["version"] = version;
   json["accesspointmode"] = "1";
   json["ssid"] = "ESP-RFID-Tool";
@@ -822,9 +817,9 @@ bool loadDefaults() {
   json["txdelayms"] = "2";
   json["safemode"] = "0";
   File configFile = SPIFFS.open("/esprfidtool.json", "w");
-  json.printTo(configFile);
+  serializeJson(json, configFile);
   configFile.close();
-  jsonBuffer.clear();
+  json.clear();
   loadConfig();
 }
 
@@ -839,8 +834,8 @@ bool loadConfig() {
 
   std::unique_ptr<char[]> buf(new char[size]);
   configFile.readBytes(buf.get(), size);
-  StaticJsonBuffer<500> jsonBuffer;
-  JsonObject& json = jsonBuffer.parseObject(buf.get());
+  StaticJsonDocument<500> json;
+  deserializeJson(json, buf.get());
   
   if (!json["version"]) {
     delay(3500);
@@ -885,60 +880,29 @@ bool loadConfig() {
   IPAddress subnet;
   subnet.fromString(subnetstr);
 
-/*
-  Serial.println(accesspointmode);
-  Serial.println(ssid);
-  Serial.println(password);
-  Serial.println(channel);
-  Serial.println(hidden);
-  Serial.println(local_IP);
-  Serial.println(gateway);
-  Serial.println(subnet);
-*/
   WiFi.persistent(false);
-  //ESP.eraseConfig();
-// Determine if set to Access point mode
+
   if (accesspointmode == 1) {
     WiFi.disconnect(true);
     WiFi.mode(WIFI_AP);
-
-//    Serial.print("Starting Access Point ... ");
-//    Serial.println(WiFi.softAP(ssid, password, channel, hidden) ? "Success" : "Failed!");
     WiFi.softAP(ssid, password, channel, hidden);
-
-//    Serial.print("Setting up Network Configuration ... ");
-//    Serial.println(WiFi.softAPConfig(local_IP, gateway, subnet) ? "Success" : "Failed!");
     WiFi.softAPConfig(local_IP, gateway, subnet);
-
-//    WiFi.reconnect();
-
-//    Serial.print("IP address = ");
-//    Serial.println(WiFi.softAPIP());
   }
 // or Join existing network
   else if (accesspointmode != 1) {
     WiFi.disconnect(true);
     WiFi.mode(WIFI_STA);
-//    Serial.print("Setting up Network Configuration ... ");
     WiFi.config(local_IP, gateway, subnet);
-//    WiFi.config(local_IP, gateway, subnet);
-
-//    Serial.print("Connecting to network ... ");
-//    WiFi.begin(ssid, password);
     WiFi.begin(ssid, password);
     WiFi.reconnect();
-
-//    Serial.print("IP address = ");
-//    Serial.println(WiFi.localIP());
   }
   configFile.close();
-  jsonBuffer.clear();
+  json.clear();
   return true;
 }
 
 bool saveConfig() {
-  StaticJsonBuffer<500> jsonBuffer;
-  JsonObject& json = jsonBuffer.createObject();
+  StaticJsonDocument<500> json;
   json["version"] = version;
   json["accesspointmode"] = accesspointmode;
   json["ssid"] = ssid;
@@ -962,9 +926,9 @@ bool saveConfig() {
   json["safemode"] = safemode;
 
   File configFile = SPIFFS.open("/esprfidtool.json", "w");
-  json.printTo(configFile);
+  serializeJson(json, configFile);
   configFile.close();
-  jsonBuffer.clear();
+  json.clear();
   return true;
 }
 
@@ -1073,12 +1037,9 @@ void setup() {
   server.on("/",[]() {
     FSInfo fs_info;
     SPIFFS.info(fs_info);
-    String total;
-    total=fs_info.totalBytes;
-    String used;
-    used=fs_info.usedBytes;
-    String freespace;
-    freespace=fs_info.totalBytes-fs_info.usedBytes;
+    String total = String(fs_info.totalBytes);
+    String used = String(fs_info.usedBytes);
+    String freespace = String(fs_info.totalBytes-fs_info.usedBytes);
     server.send(200, "text/html", String()+F("<html><body><b>ESP-RFID-Tool v")+version+F("</b><br>"
     "<img width='86' height='86' src='data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjwhLS0gQ3JlYXRlZCB3aXRoIElua3NjYXBlIChodHRwOi8vd3d3Lmlua3NjYXBlLm9yZy8pIC0tPgoKPHN2ZwogICB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iCiAgIHhtbG5zOmNjPSJodHRwOi8vY3JlYXRpdmVjb21tb25zLm9yZy9ucyMiCiAgIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyIKICAgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIgogICB4bWxuczpzb2RpcG9kaT0iaHR0cDovL3NvZGlwb2RpLnNvdXJjZWZvcmdlLm5ldC9EVEQvc29kaXBvZGktMC5kdGQiCiAgIHhtbG5zOmlua3NjYXBlPSJodHRwOi8vd3d3Lmlua3NjYXBlLm9yZy9uYW1lc3BhY2VzL2lua3NjYXBlIgogICB3aWR0aD0iNTYuNTkwNzI5bW0iCiAgIGhlaWdodD0iNDMuODMwODMzbW0iCiAgIHZpZXdCb3g9IjAgMCA1Ni41OTA3MjggNDMuODMwODM0IgogICB2ZXJzaW9uPSIxLjEiCiAgIGlkPSJzdmczMDAwIgogICBpbmtzY2FwZTp2ZXJzaW9uPSIwLjkyLjIgKDVjM2U4MGQsIDIwMTctMDgtMDYpIgogICBzb2RpcG9kaTpkb2NuYW1lPSJyZmlkdG9vbDQuc3ZnIj4KICA8ZGVmcwogICAgIGlkPSJkZWZzMjk5NCI+CiAgICA8ZmlsdGVyCiAgICAgICBzdHlsZT0iY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzOnNSR0I7IgogICAgICAgaW5rc2NhcGU6bGFiZWw9IkNyb3NzIEJsdXIiCiAgICAgICBpZD0iZmlsdGVyMzEyMCI+CiAgICAgIDxmZUNvbG9yTWF0cml4CiAgICAgICAgIGluPSJTb3VyY2VHcmFwaGljIgogICAgICAgICB2YWx1ZXM9IjEgMCAwIDAgMCAwIDEgMCAwIDAgMCAwIDEgMCAwIC0wLjIxMjUgLTAuNzE1NCAtMC4wNzIxIDEgMCAiCiAgICAgICAgIHJlc3VsdD0iY29sb3JtYXRyaXgiCiAgICAgICAgIGlkPSJmZUNvbG9yTWF0cml4MzExMCIgLz4KICAgICAgPGZlQ29tcG9zaXRlCiAgICAgICAgIGluPSJTb3VyY2VHcmFwaGljIgogICAgICAgICBpbjI9ImNvbG9ybWF0cml4IgogICAgICAgICBvcGVyYXRvcj0iYXJpdGhtZXRpYyIKICAgICAgICAgazI9IjEiCiAgICAgICAgIGszPSIwIgogICAgICAgICBrND0iMCIKICAgICAgICAgcmVzdWx0PSJjb21wb3NpdGUiCiAgICAgICAgIGlkPSJmZUNvbXBvc2l0ZTMxMTIiIC8+CiAgICAgIDxmZUdhdXNzaWFuQmx1cgogICAgICAgICBzdGREZXZpYXRpb249IjAuNzUgMC4wMSIKICAgICAgICAgcmVzdWx0PSJibHVyMSIKICAgICAgICAgaWQ9ImZlR2F1c3NpYW5CbHVyMzExNCIgLz4KICAgICAgPGZlR2F1c3NpYW5CbHVyCiAgICAgICAgIGluPSJjb21wb3NpdGUiCiAgICAgICAgIHN0ZERldmlhdGlvbj0iMC4wMSAwLjc1IgogICAgICAgICByZXN1bHQ9ImJsdXIyIgogICAgICAgICBpZD0iZmVHYXVzc2lhbkJsdXIzMTE2IiAvPgogICAgICA8ZmVCbGVuZAogICAgICAgICBpbj0iYmx1cjIiCiAgICAgICAgIGluMj0iYmx1cjEiCiAgICAgICAgIG1vZGU9ImRhcmtlbiIKICAgICAgICAgcmVzdWx0PSJibGVuZCIKICAgICAgICAgaWQ9ImZlQmxlbmQzMTE4IiAvPgogICAgPC9maWx0ZXI+CiAgPC9kZWZzPgogIDxzb2RpcG9kaTpuYW1lZHZpZXcKICAgICBpZD0iYmFzZSIKICAgICBwYWdlY29sb3I9IiNmZmZmZmYiCiAgICAgYm9yZGVyY29sb3I9IiM2NjY2NjYiCiAgICAgYm9yZGVyb3BhY2l0eT0iMS4wIgogICAgIGlua3NjYXBlOnBhZ2VvcGFjaXR5PSIwLjAiCiAgICAgaW5rc2NhcGU6cGFnZXNoYWRvdz0iMiIKICAgICBpbmtzY2FwZTp6b29tPSIyLjA2MTY4NDgiCiAgICAgaW5rc2NhcGU6Y3g9IjE5NC44Njc5IgogICAgIGlua3NjYXBlOmN5PSI4Ny4zNDU1MTUiCiAgICAgaW5rc2NhcGU6ZG9jdW1lbnQtdW5pdHM9Im1tIgogICAgIGlua3NjYXBlOmN1cnJlbnQtbGF5ZXI9ImxheWVyMSIKICAgICBzaG93Z3JpZD0iZmFsc2UiCiAgICAgZml0LW1hcmdpbi10b3A9IjAiCiAgICAgZml0LW1hcmdpbi1sZWZ0PSIwIgogICAgIGZpdC1tYXJnaW4tcmlnaHQ9IjAiCiAgICAgZml0LW1hcmdpbi1ib3R0b209IjAiCiAgICAgaW5rc2NhcGU6d2luZG93LXdpZHRoPSIxMzY2IgogICAgIGlua3NjYXBlOndpbmRvdy1oZWlnaHQ9IjY1OSIKICAgICBpbmtzY2FwZTp3aW5kb3cteD0iMCIKICAgICBpbmtzY2FwZTp3aW5kb3cteT0iMzEiCiAgICAgaW5rc2NhcGU6d2luZG93LW1heGltaXplZD0iMSIgLz4KICA8bWV0YWRhdGEKICAgICBpZD0ibWV0YWRhdGEyOTk3Ij4KICAgIDxyZGY6UkRGPgogICAgICA8Y2M6V29yawogICAgICAgICByZGY6YWJvdXQ9IiI+CiAgICAgICAgPGRjOmZvcm1hdD5pbWFnZS9zdmcreG1sPC9kYzpmb3JtYXQ+CiAgICAgICAgPGRjOnR5cGUKICAgICAgICAgICByZGY6cmVzb3VyY2U9Imh0dHA6Ly9wdXJsLm9yZy9kYy9kY21pdHlwZS9TdGlsbEltYWdlIiAvPgogICAgICAgIDxkYzp0aXRsZSAvPgogICAgICA8L2NjOldvcms+CiAgICA8L3JkZjpSREY+CiAgPC9tZXRhZGF0YT4KICA8ZwogICAgIGlua3NjYXBlOmxhYmVsPSJMYXllciAxIgogICAgIGlua3NjYXBlOmdyb3VwbW9kZT0ibGF5ZXIiCiAgICAgaWQ9ImxheWVyMSIKICAgICB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMTgxLjkzNTEsLTIyNi4xMTMpIj4KICAgIDxwYXRoCiAgICAgICBpZD0icGF0aDM1NTYiCiAgICAgICB0cmFuc2Zvcm09Im1hdHJpeCgwLjI2NDU4MzMzLDAsMCwwLjI2NDU4MzMzLDE2Mi44OTQyMywyMTguNDkzODEpIgogICAgICAgc3R5bGU9ImZpbGw6IzAwMDAwMDtzdHJva2Utd2lkdGg6MS4wMDAwMDAxMjtmaWx0ZXI6dXJsKCNmaWx0ZXIzMTIwKSIKICAgICAgIGQ9Im0gMjI3LjkwODIsMTY2LjE0NDYyIC01LjEwMTU2LDQuNDYyODkgYyAtMjQuNDMxNTUsMjEuMzcyMTMgLTY1LjU3MjQsMjEuNzYwMjYgLTg5LjQ3MjY2LDAuODQzNzUgbCAtNS4zMjgxMiwtNC42NjIxMSAtMi4wNTY2NCwyLjA1ODYgLTIuMDU4NiwyLjA1NjY0IDMuNzU1ODYsMy4zMzc4OSBjIDEwLjgwMDY4LDkuNTk5ODUgMjQuMDYxLDE1Ljc4Mjk4IDM5LjAxMzY4LDE4LjE5MTQgNi40NjIwNCwxLjA0MDg1IDI0LjA5MTgsLTAuMjg4MjYgMzEuNDcyNjUsLTIuMzczMDQgOS45MTM0LC0yLjgwMDE0IDIxLjQ1OTMxLC04LjkxNTM3IDI4LjExOTE0LC0xNC44OTI1OCA1LjM1Nzc1LC00LjgwODU4IDUuMzkxNjQsLTQuODczNzkgMy41MzMyMSwtNi45Mzk0NSB6IG0gLTExLjEzMDg2LC0xMC4zMTA1NSBjIC0wLjg2NDc4LDAuMDgzOCAtMi4wOTk2NCwxLjA1MTExIC00Ljg1MTU2LDMuMjQyMTkgLTEwLjEwMjYsOC4wNDM4NiAtMjEuMzM5MTMsMTEuOTczMjkgLTM0LjMwNDY5LDExLjk5MjE5IC0xMy4wNDM0MSwwLjAxOTMgLTIyLjU2ODY2LC0zLjE4Njk0IC0zMy4zMTgzNiwtMTEuMjE0ODQgbCAtNS4zNTkzNywtNC4wMDE5NiAtMi4wMDE5NSwyLjAwMzkxIC0yLjAwMzkxLDIuMDAxOTUgNS4zMDI3Myw0LjE5MTQxIGMgNy42MzQ2OSw2LjAzNDg1IDE3LjU2Mzg2LDEwLjYwODU1IDI2LjkxOTkzLDEyLjQwMDM5IDEuMzc0OTksMC4yNjM0MyA2Ljk5OTk5LDAuMzU1ODggMTIuNSwwLjIwNTA4IDEyLjI3OTIzLC0wLjMzNjc2IDIxLjgwMTUyLC0zLjM3NzM4IDMxLjY0ODQzLC0xMC4xMDU0NyA4LjkwMzAyLC02LjA4MzE1IDkuNjAyNDQsLTYuOTgxOTYgNy4zNTU0NywtOS40NjQ4NSAtMC43NjQzNSwtMC44NDQ1OSAtMS4yMTQxMSwtMS4zMTUxOSAtMS44ODY3MiwtMS4yNSB6IG0gLTY2LjI2OTUzLC0xMS43OTQ5MiAtMS44MjgxMiwyLjAxOTUzIGMgLTEuNzcyODMsMS45NTg5NyAtMS43NzA2NiwyLjA4NTc1IDAuMDc2Miw0LjE1MDM5IDIuOTAwNDgsMy4yNDI2OSA4LjYwNDAzLDYuNTcyNTUgMTUuMDcwMzEsOC43OTY4OCAxMy44MjM3LDQuNzU1MjkgMzMuNjY4MzYsMC42NDA3MyA0Mi43ODEyNSwtOC44NzEwOSAyLjU0Nzg5LC0yLjY1OTQzIDIuNTU5OTUsLTIuNzM4NzYgMC42Njk5MiwtNC40NDkyMiAtMS44NDQ0NCwtMS42NjkxOSAtMi4xMTIwOSwtMS41OTY3NiAtNi40ODYzMiwxLjc0MjE4IC03LjY1NTcsNS44NDM2OCAtMTQuNjIzNTksNy45MDgwOCAtMjUuMTMwODYsNy40NDUzMiAtNy4zNDEwNiwtMC4zMjMzIC0xMC4wMTM4MiwtMC45MDY0NyAtMTQuNSwtMy4xNjYwMiAtMy4wMjQ5OSwtMS41MjM2IC02LjY1OTIzLC0zLjg3MTggLTguMDc2MTgsLTUuMjE4NzUgeiBtIDQzLjc1MzkxLC0xMS4zMDI3MyAtMy44MDA3OCwyLjYyMTA5IGMgLTcuNjkyMzIsNS4zMDI1NyAtMTcuNTkyMzYsNS4zOTA4NiAtMjUuNDQ1MzIsMC4yMjg1MiAtMy41ODg2MiwtMi4zNTkwNyAtMy42NzI2NSwtMi4zNjQ5NCAtNS4zODg2NywtMC40Njg3NSAtMi4yNDk4NywyLjQ4NjEgLTEuMDc2NTIsMy45ODExMiA1LjgxMjUsNy40MTQwNiA4Ljg1NTk3LDQuNDEzMTMgMjEuMzc3ODcsMy4wOTkzMiAyOS41LC0zLjA5NTcgbCAzLjQxNjAyLC0yLjYwNTQ3IC0yLjA0Njg4LC0yLjA0Njg4IHogbSAtMTEuNDA4MiwtMTEuMDEzNjcgYyAtMC41NzAxOSwtMC4wNjA0IC0xLjIwNzcsMC4zMDQ0NSAtMi4zNDM3NSwxLjA0ODgyIC0xLjk4MTM4LDEuMjk4MjcgLTIuOTA5MjQsMS4zNzU1OCAtNS4wMTk1NCwwLjQxNDA3IC0yLjE2NCwtMC45ODYwMSAtMi45MDkzMywtMC44OTA5IC00LjUzOTA2LDAuNTgzOTggLTEuOTI4NzMsMS43NDUzOSAtMS45MjYzLDEuNzgyNzcgMC4yNDAyNCwzLjUzNzExIDIuOTgyNjUsMi40MTUzMSAxMC4wNDIxOSwyLjM0NDg4IDEzLjA5OTYxLC0wLjEzMDg2IDIuMjk5MiwtMS44NjE3OSAyLjMxMDA1LC0xLjk1MTA4IDAuNSwtMy45NTExNyAtMC44NjU1LC0wLjk1NjM1IC0xLjM2NzMyLC0xLjQ0MTU2IC0xLjkzNzUsLTEuNTAxOTUgeiBtIC0zLjU2MjUsLTEzLjM2NzIzIGMgLTAuMzk5NjQsLTAuMDIxMyAtMC44NzkyMSwwLjA3NDggLTEuNDM3NSwwLjI4OTA2IC0xLjg1Mjk2LDAuNzExMDQgLTIuOTAyNTksNS42ODgzMiAtMS4zOTY0OSw2LjYxOTE0IDEuNzg0OTYsMS4xMDMxNyAzLjk4MzU1LC0wLjcxNTggNC4yODUxNiwtMy41NDI5NyAwLjIzMjM4LC0yLjE3OTczIC0wLjI1MjI2LC0zLjMwMTQ2IC0xLjQ1MTE3LC0zLjM2NTIzIHogbSAtMjcuODk4NDQsLTMuNjg5NDYgYyAyLjYyODAzLC0wLjEyMDQ0IDcuMzMzNTgsMS40Njg5NyA4LjQ5MDIzLDMuMDUwNzkgMi4wMzI3NSwyLjc3OTk1IDEuNjA5MTMsMTAuMDMxNTQgLTAuNzIyNjUsMTIuMzYzMjggLTEuMzMzMzEsMS4zMzMzNCAtMy4zMzMzMiwyIC02LDIgaCAtNCB2IC04LjQxNzk3IGMgMCwtNS44NDMwNyAwLjM4MjIyLC04LjU0NDkyIDEuMjUsLTguODM1OTQgMC4yNzQyMiwtMC4wOTIgMC42MDY5OCwtMC4xNDI5NSAwLjk4MjQyLC0wLjE2MDE2IHogbSA3NC40NDcyNiwtMC40NjY3OSBjIDAuODg4MjYsLTAuMDU0NSAxLjg3NTIsMC4wNTQyIDIuOTU4OTksMC4zMjYxNyA1LjM4NDczLDEuMzUxNDggNi43ODA5OSwxMi4yMjI2OCAyLjEyNjk1LDE2LjU1ODU5IC0yLjc4Njg3LDIuNTk2MzUgLTUuMDQyNjEsMi41MjI0IC04LjI5Mjk3LC0wLjI3MzQzIC0yLjE0Njc3LC0xLjg0NjU3IC0yLjYzODY3LC0zLjEzNTc3IC0yLjYzODY3LC02LjkxMDE2IDAsLTYuMTc5MTMgMS45OTY1OCwtOS40NjQ4NyA1Ljg0NTcsLTkuNzAxMTcgeiBtIC0xNDUuMzIyMjYyLC0wLjAxMTcgYyAwLjgwODE0NywwLjAyODUgMS43ODA5NCwwLjIxNjAxIDIuOTQxNDA2LDAuNTQ4ODMgMy40Mzk3NDgsMC45ODY0OSA0LjYwMTA0NSwzLjU1NDM1IDIuNjYyMTEsNS44OTA2MiAtMC42NzQyNjgsMC44MTI0OSAtMi45MTQyMzMsMS40NTMxMyAtNS4wODM5ODUsMS40NTMxMyAtMy43NzEzNjMsMCAtMy44NzY5NTMsLTAuMDk2NiAtMy44NzY5NTMsLTMuNTMxMjUgMCwtMy4xMDUxIDAuOTMyOTgyLC00LjQ0Njg1IDMuMzU3NDIyLC00LjM2MTMzIHogbSAxNzAuNDI5NjkyLC0wLjAzNTIgYyAxLjc0OTk3LC0wLjAzNDYgMy40NjAzMSwwLjU0MzUxIDQuNTQ2ODcsMS43NDQxNCAzLjYzNzA4LDQuMDE4OTYgMi44MDg5OSwxMy45NjY4NSAtMS4zNDc2NiwxNi4xOTE0MSAtMi45MjIyNSwxLjU2MzkzIC00Ljg4NjQxLDEuMTgxOTUgLTcuNTMxMjUsLTEuNDYyODkgLTMuMjUzODcsLTMuMjUzODggLTMuNTExNzMsLTExLjQ4ODI3IC0wLjQ1NTA3LC0xNC41NDQ5MyAxLjI0NjcxLC0xLjI0NjczIDMuMDM3MTMsLTEuODkzMTUgNC43ODcxMSwtMS45Mjc3MyB6IG0gMTkuNzEyODksLTIuMDcyMjcgYyAtNC44ODYyNSwwIC02LjU1NTUyLDAuMzMzODQgLTYuMjUzOTEsMS4yNSAwLjIyNjQzLDAuNjg3NSAxLjM4NzYyLDEuMzk0NTcgMi41ODIwMywxLjU3MDMxIDIuMDMxODQsMC4yOTkgMi4xNzE4OCwwLjg2MjIxIDIuMTcxODgsOC43NTAwMSAwLDguMzI1NzcgLTAuMDMxLDguNDI5NjggLTIuNSw4LjQyOTY4IC0xLjU4MDg3LDAgLTIuNSwwLjU2NDUgLTIuNSwxLjUzNTE1IDAsMS4yOTg3NiAxLjU3Nzk4LDEuNDkxMTQgMTAuMjUsMS4yNSBsIDEwLjI1LC0wLjI4NTE1IDAuMzA0NjgsLTQuNzUgYyAwLjI0MTMzLC0zLjc2MDY3IC0wLjAxOTEsLTQuNzUgLTEuMjUsLTQuNzUgLTEuMTEwMjcsMCAtMS41NTQ2OCwxLjAwMDc1IC0xLjU1NDY4LDMuNSB2IDMuNSBoIC01IC01IHYgLTguNDI5NjggYyAwLC02LjkwMTgyIDAuMTA4MTIsLTguMTk1NDEgMS40OTYwOSwtOC42MTEzMyAwLjE5ODI4LC0wLjA1OTQgMC40MjE3OSwtMC4xMDEzMSAwLjY3NTc4LC0wLjEzODY4IDEuMTk0NDEsLTAuMTc1NzQgMi4zNTc1OSwtMC44ODI4MSAyLjU4Mzk5LC0xLjU3MDMxIDAuMzAxNzIsLTAuOTE2MjcgLTEuMzY5NjUsLTEuMjUgLTYuMjU1ODYsLTEuMjUgeiBtIC02OC4wNjgzNiwwIGMgLTkuMDc5MDMsMCAtOS40MTQzMSwwLjA4MDMgLTkuOTk2MSwyLjM5ODQ0IC0wLjgyNzM3LDMuMjk2NDMgLTAuMTkwMDYsNi44NTk5NyAxLjMxNDQ2LDcuMzU1NDYgMC44NDQwNCwwLjI3Nzk2IDEuMjUsLTAuNzUyMjkgMS4yNSwtMy4xNzE4NyAwLC0zLjMxNDYgMC4yMjQ4LC0zLjU4MjAzIDMsLTMuNTgyMDMgaCAzIHYgOC41IGMgMCw4LjM5OTg1IC0wLjAyOTQsOC41IC0yLjUsOC41IC0xLjU1NTU4LDAgLTIuNSwwLjU2NjY1IC0yLjUsMS41IGggMC4wMDIgYyAwLDEuMTc5NDggMS4zODg4NywxLjUgNi41LDEuNSAxLjI3Nzc3LDAgMi4zMjI5MiwtMC4wMTk5IDMuMTcxODcsLTAuMDY4NCAyLjU0Njg4LC0wLjE0NTQzIDMuMzI4MTMsLTAuNTQ3MDMgMy4zMjgxMywtMS40MzE2NCAwLC0wLjkzMzM1IC0wLjk0NDQyLC0xLjUgLTIuNSwtMS41IC0yLjQ2OTc3LDAgLTIuNSwtMC4xIC0yLjUsLTguNSB2IC04LjUgaCAzIGMgMi43NjE4OSwwIDMsMC4yNzc3NyAzLDMuNSAwLDMuMzkzNjEgMS4yMTM0Niw0LjU3OTMyIDIuNTIxNDgsMi40NjI4OSAwLjM1MTA1LC0wLjU3MDE3IDAuMzM4ODMsLTIuODIwMiAtMC4wMjkzLC01IGwgLTAuNjY5OTIsLTMuOTYyODkgeiBtIC01MS4zNTM1MiwwIGMgLTYuNjQxMTIsMCAtOS4yNDQ5OCwxLjIzMTU5IC01LjU3ODEyLDIuNjM4NjcgMi4yMzEwNSwwLjg1NjE4IDIuMTc0NzksMTYuODg3NTUgLTAuMDYyNSwxNy43NDYwOSAtMC44NTk3MywwLjMyOTk2IC0xLjI4Mzg0LDEuMDUzNTQgLTAuOTQxNDEsMS42MDc0MyAwLjkzMzc3LDEuNTEwODYgMTEuMjA3NzgsMS4yMTE4IDE0LjM1OTM3LC0wLjQxNzk3IDMuNDgyMjcsLTEuODAwNzYgNS4xNDQ1NCwtNS40MjAyOSA1LjE0NDU0LC0xMS4xOTkyMiAwLC0zLjY3MzM2IC0wLjU1MTQ3LC01LjA4Mjc2IC0yLjkyMTg4LC03LjQ1MzEyIC0yLjY4MDAyLC0yLjY4MDA3IC0zLjUxMTQ2LC0yLjkyMTg4IC0xMCwtMi45MjE4OCB6IG0gLTIxLjA3ODEyLDAgYyAtNi4wODU1MywwIC04LjA2MTYzLDAuMzE4NTQgLTcuNzU1ODYsMS4yNSAwLjIyNTcxLDAuNjg3NSAxLjgzODg2LDEuMzkwMTYgMy41ODM5OCwxLjU2MjUgbCAzLjE3MTg4LDAuMzE0NDUgdiA4LjQzNTU1IDguNDM3NSBoIC0zLjUgYyAtMi4xMzg5LDAgLTMuMjEzNzYsMC4zNDYzNCAtMy40NDkyMiwxLjEzNDc2IC0wLjAzMzYsMC4xMTI2NCAtMC4wNTA4LDAuMjM0MjggLTAuMDUwOCwwLjM2NTI0IDAsMC45MDYxNSAwLjg3NDk5LDEuMjk2ODYgNC4wMzEyNSwxLjQzNTU0IDEuMDUyMDgsMC4wNDYyIDIuMzU3NjMsMC4wNjQ1IDMuOTY4NzUsMC4wNjQ1IDEuNjExMSwwIDIuOTE2NjcsLTAuMDE4MiAzLjk2ODc1LC0wLjA2NDUgMy4xNTYyNCwtMC4xMzg2NyA0LjAzMTI1LC0wLjUyOTMgNC4wMzEyNSwtMS40MzU1NCAwLC0wLjEyNTAxIC0wLjAxNTYsLTAuMjQyMTggLTAuMDQ2OSwtMC4zNTE1NiAtMC4yMTg3NSwtMC43NjU2NSAtMS4yMDMxMSwtMS4xNDg0NCAtMi45NTMxMiwtMS4xNDg0NCBoIC0zIHYgLTguNDMzNiBjIDAsLTguMzk1ODcgMC4wMTMsLTguNDM0NzggMi42NzM4MiwtOC43NDk5OSAxLjQ3MDA5LC0wLjE3NDAxIDIuODU2NCwtMC44Nzg5MSAzLjA4MjA0LC0xLjU2NjQxIDAuMzA1ODcsLTAuOTMxMzkgLTEuNjcwMywtMS4yNSAtNy43NTU4NiwtMS4yNSB6IG0gLTIzLjkzOTQ2LDAgYyAtNi4yNDQzNDMsMCAtMTAuMDYwNTQ0LDAuMzkxMDggLTEwLjA2MDU0NCwxLjAzMTI1IDAsMC41NjcyNyAwLjY3NTAwNSwxLjI5MDcgMS41LDEuNjA3NDIgMS4xNjg1MTcsMC40NDg0MSAxLjUsMi40MzA3NyAxLjUsOC45Njg3NiAwLDYuNzkzNzcgLTAuMjg1ODI3LDguMzkyNTcgLTEuNSw4LjM5MjU3IC0wLjcyMTg3MSwwIC0xLjMyODI2NywwLjUxNzMxIC0xLjQ2ODc1LDEuMTk5MjIgLTAuMDIwMDcsMC4wOTc0IC0wLjAzMTI1LDAuMTk3NjUgLTAuMDMxMjUsMC4zMDA3OCAwLDEuMTY2NjIgMS4zMzMzNDIsMS41IDYuMDAwMDA0LDEuNSAxLjE2NjY3LDAgMi4xMjQ5OSwtMC4wMjA4IDIuOTA2MjUsLTAuMDcwMyAyLjM0Mzc1LC0wLjE0ODQ0IDMuMDkzNzUsLTAuNTU0NjkgMy4wOTM3NSwtMS40Mjk2OSAwLC0wLjEyNTc4IC0wLjAxNTMsLTAuMjQzNyAtMC4wNDY5LC0wLjM1MzUyIC0wLjIyMDY3LC0wLjc2ODY0IC0xLjIxNTA0LC0xLjE0NjQ4IC0zLjAwOTc2LC0xLjE0NjQ4IC0wLjM3MjM0LDAgLTAuNjk5OTEsLTAuMDAzIC0wLjk4NjMzLC0wLjAxMzcgLTAuMjg2NDMsLTAuMDExMSAtMC41MzE3NiwtMC4wMzA5IC0wLjc0MjE5LC0wLjA2ODQgLTAuMjEwNDMsLTAuMDM3NSAtMC4zODQ5NiwtMC4wOTI3IC0wLjUyOTMsLTAuMTcxODkgLTAuNzIxNjgsLTAuMzk2MDEgLTAuNjc5NTEsLTEuNDA4MzcgLTAuNDkyMTgsLTMuOTk2MDggMC4yNTU3OSwtMy41MzU3NiAwLjY4NDk1LC00LjMwMzg2IDIuNTYwNTQsLTQuNTcwMzIgMS4zNTIyOCwtMC4xOTIwNCAyLjQ5NjEsMC4zMDgxOCAyLjg1NzQyLDEuMjUgMC4zMzEzOSwwLjg2MzU4IDEuMDA0OTUsMS41NzAzMiAxLjQ5NjEsMS41NzAzMiAxLjIyODQ2LDAgMS4xMzE5MiwtNi43MzQwNCAtMC4xMDc0MiwtNy41IC0wLjU1LC0wLjMzOTkzIC0xLDAuMDgzOSAtMSwwLjk0MTQgMCwwLjY2NiAtMC4zNzE2MSwxLjEwNzUgLTEuMTUwMzksMS4zNDU3MSAtMC4xNTU3NiwwLjA0NzYgLTAuMzI2OTUsMC4wODc3IC0wLjUxNTYzLDAuMTE5MTQgLTAuMzc3MzcsMC4wNjI5IC0wLjgyMTM3LDAuMDkzNyAtMS4zMzM5OCwwLjA5MzcgLTIuNjY2NjUsMCAtMywtMC4zMzMzMiAtMywtMyAwLC0yLjk2NTk5IDAuMDY0NSwtMy4wMDAwMSA1LjQzMTY0LC0zLjAwMDAxIDQuNjk0NDcsMCA1LjQ3MTc2LDAuMjc1ODggNS43NDgwNCwyLjAzOTA3IDAuNTQ4NzUsMy41MDI0OSAyLjMwNTQ1LDIuNjQyMDYgMi42MzA4NiwtMS4yODkwNyBsIDAuMzEwNTUsLTMuNzUgeiBNIDc1Ljc5ODgyOCwxMDIuMDQzIGMgLTIuNjM2NjcxLDAuMDcxNCAtNC42Mzg2NzIsMC40MDE2NCAtNC42Mzg2NzIsMS4wMzcxMSAwLDAuNTUgMC42NzQ5NjcsMSAxLjUsMSAxLjIyMDY3NCwwIDEuNSwxLjY1NDM3IDEuNSw4Ljg5MjU5IDAsNi45ODI0MSAtMC4zMjIyOTksOS4wMTY4MyAtMS41LDkuNDY4NzUgLTAuODI1MDMzLDAuMzE2NTcgLTEuNSwxLjA0MDE5IC0xLjUsMS42MDc0MiB2IDAuMDAyIGMgMCwxLjM2NTI0IDguNjk0MDk5LDEuMzMxMjMgOS41NDEwMTYsLTAuMDM5MSAwLjM2MzIxMiwtMC41ODc3MyAtMC4yODI3NjcsLTEuMzEyODggLTEuNDM5NDUzLC0xLjYxNTI0IC0xLjYxMjAwNywtMC40MjE1NCAtMi4xMDE1NjMsLTEuMzM3MjEgLTIuMTAxNTYzLC0zLjkzMzU5IDAsLTIuOTQyODUgMC4zMjYwMDQsLTMuMzgyODIgMi41MDE5NTMsLTMuMzgyODIgMS44NTYzNTMsMCAzLjQyODE2MywxLjI4OTcxIDYuMDkzNzUsNSAzLjUwMzQ3MSw0Ljg3NjYxIDcuNDA0Mjk3LDYuNzIwNTMgNy40MDQyOTcsMy41IDAsLTAuODI1MDIgLTAuNTYyNDY2LC0xLjUwNjExIC0xLjI1LC0xLjUxMzY3IC0wLjY4NzQ5NiwtMC4wMDcgLTIuMjk2Njg4LC0xLjYyNzA3IC0zLjU3NjE3MiwtMy42MDE1NyBsIC0yLjMyNjE3MiwtMy41ODk4MyAyLjA3NjE3MiwtMS40NTUwOCBjIDIuOTE5NDU5LC0yLjA0NDk1IDIuODM0ODA3LC03LjY5NTAyIC0wLjE0NjQ4NCwtOS43ODMyMSAtMS41ODczMDcsLTEuMTExNzcgLTcuNzQ0MjIsLTEuNzEyNzEgLTEyLjEzODY3MiwtMS41OTM3NSB6IG0gMTc1LjEzMDg2MiwtMC41OTE3OSBjIC00LjE3MTE1LC0wLjAzMzcgLTguMjU1NjEsMi41NDE3OSAtOS43NjU2Myw3LjExNzE5IC0xLjU1MDM2LDQuNjk3NzMgLTAuNTgxNzQsOS42NzE0MSAyLjYyNSwxMy40ODI0MiAyLjA1MDk2LDIuNDM3NDIgMy4zMjU3MiwzLjAyOTMgNi41MjUzOSwzLjAyOTMgMi4xODcyNSwwIDQuODQyMjQsLTAuNDYyOTcgNS45MDAzOSwtMS4wMjkzIDUuNDc5MywtMi45MzI0MiA2LjU1ODI5LC0xNC44MTI4NSAxLjc3OTMsLTE5LjU5MTc5IC0yLjAyODkxLC0yLjAyODkyIC00LjU2MTc3LC0yLjk4NzYyIC03LjA2NDQ1LC0zLjAwNzgyIHogbSAtMjQuNjA3NDIsLTAuMjY1NjIgYyAtMS40NjczMSwwLjA2NjIgLTIuOTMxOTYsMC42NzU1OSAtNC44NTc0MywxLjg0OTYxIC02LjAyMDg2LDMuNjcxMTYgLTYuOTA5NDUsMTQuMTY2NzIgLTEuNjQ0NTMsMTkuNDMxNjQgMi44MTc2NCwyLjgxNzYzIDguNjg2NDQsMy41Njg1IDEyLjM5NDUzLDEuNTgzOTggNi45NTg0OSwtMy43MjQwNCA2LjI5NDg5LC0xNy42NzE2MiAtMS4wMjE0OCwtMjEuNDU1MDggLTEuOTMzNTcsLTAuOTk5ODcgLTMuNDAzNzksLTEuNDc2MzYgLTQuODcxMDksLTEuNDEwMTUgeiBtIC00Ny40OTgwNSwtNi4wNjY0NDkgYyAtMi42Nzk4MiwwLjA3MDk0IC01LjM2MDM3LDAuNzAzNTk2IC02Ljc5NDkyLDEuODY1MjM0IC0wLjI4NzQsMC4yMzI3MiAtMC41MzkwNSwwLjQzODUzNCAtMC43NTU4NiwwLjYyMzA0NyAtMC4yMTY4MSwwLjE4NDUxMyAtMC4zOTg4MywwLjM0OTMwMyAtMC41NDY4OCwwLjUgLTAuODg4MjgsMC45MDQxODMgLTAuNTU0OCwxLjMyODA4NyAwLjgwMjc0LDIuODI4MTI4IDEuNzMwOTgsMS45MTI3NCAyLjAxMTA2LDEuOTQxODggNC4yODMyLDAuNDUzMTIgMS45OTQ3NiwtMS4zMDcwMyAyLjkwMTEsLTEuMzc2NjggNS4wNTY2NCwtMC4zOTQ1MyAyLjI2NTE4LDEuMDMyMDggMi45MDcwOSwwLjkxNTE4IDQuNjY3OTcsLTAuODQ1NyAyLjAyMzc1LC0yLjAyMzU5OSAyLjAyMzczLC0yLjA1NTI0NSAwLjA4MiwtMy41MjM0NCAtMS40MzU4LC0xLjA4NTU5NCAtNC4xMTUxLC0xLjU3NjgwMSAtNi43OTQ5MiwtMS41MDU4NTkgeiBtIDAuMzI2MTcsLTE2LjA5MTc5NyBjIC00LjAzMTMzLDAuMDAzMiAtOC4wNjAxMiwwLjgxMDc1NyAtMTEuNDkwMjMsMi40MjE4NzUgLTYuNTEyMDMsMy4wNTg3MDUgLTkuMjUyMTUsNi4wMTgzMjcgLTcuNTE1NjMsOC4xMTMyODEgMS40NDc1OSwxLjc0MzIzOSAzLjYxMDQxLDEuOTgyNDU2IDQuNTI1MzksMC41MDE5NTMgMC4xNzIzOSwtMC4yNzg5MjkgMC43ODc5NSwtMC43NjYyNTEgMS42NDI1OCwtMS4zMjgxMjUgMC40MjczMSwtMC4yODA5MzcgMC45MTUwMywtMC41ODAwNDMgMS40MzU1NSwtMC44ODA4NTkgMC41MjA1MSwtMC4zMDA4MTYgMS4wNzQ1NywtMC42MDM4MzUgMS42MzY3MiwtMC44OTA2MjUgNy4yMTU4MywtMy42ODEyMjIgMTcuOTIwMTYsLTIuNDUxNjAyIDIzLjg2MzI4LDIuNzQyMTg3IDEuMzcwMywxLjE5NzU0NCAxLjgzNDgzLDEuMTE1NDAyIDMuMzg4NjcsLTAuNjAxNTYyIDIuMzUzOTYsLTIuNjAxMTA5IDAuODk2OTIsLTQuNDcxMjcxIC01Ljk3NjU2LC03LjY3NTc4MSAtMy40NDQ1NywtMS42MDUxNjYgLTcuNDc4NDQsLTIuNDA1NTggLTExLjUwOTc3LC0yLjQwMjM0NCB6IG0gLTAuMjI0MzgsLTE1LjkyNTc4MiBjIC0xMC4yMDc4NiwwLjA2NDM5IC0yMC40Mzk1MywzLjYyNTYwNCAtMjguNzIwNywxMC41OTM3NSAtMi45NzQzNCwyLjUwMjcyOCAtMy4wNDQ1MiwyLjcyNzYwNSAtMS40MzE2NCw0LjUwOTc2NiAwLjkzMzUsMS4wMzE1NDcgMS45MDA1LDEuODc1IDIuMTQ4NDQsMS44NzUgMC4yNDgxMiwwIDIuMjM1LC0xLjQxMzIzIDQuNDE2MDEsLTMuMTQwNjI1IDEyLjk4NjM4LC0xMC4yODU0MTcgMzMuNzQwODksLTEwLjY4NzM4NyA0NS45MzE2NCwtMC44OTA2MjUgNC40Mjc0OSwzLjU1ODA0NyA1LjAyMDcyLDMuNjUwMTI5IDcuMjk4ODMsMS4xMzI4MTMgMS42NTIwMywtMS44MjU0NzQgMS40OTY2OSwtMi4wNTkwOSAtNC4wMzEyNSwtNi4wMTc1NzkgLTcuNjE0ODcsLTUuNDUyODgzIC0xNi42MDQzOSwtOC4xMTkzMTQgLTI1LjYxMTMzLC04LjA2MjUgeiBtIDEuNjM4NjgsLTE1Ljk1MzEyNCBjIC0xNC42MjEyOSwtMC4wMDMgLTMwLjQ5MTc5LDUuMzkwNTIzIC00MC44MTQ0NSwxNC40Nzg1MTUgLTMuODE4LDMuMzYxMzIzIC0zLjg2ODA0LDMuNDg4ODY2IC0yLjA5NTcsNS40NDcyNjYgMC45OTgyOCwxLjEwMzA5MyAyLjAxNDc5LDIuMDA1ODU5IDIuMjU3ODEsMi4wMDU4NTkgMC4yNDI4NywwIDIuMzc4MTgsLTEuNzA0NzI5IDQuNzQ2MDksLTMuNzg5MDYyIDguNzgyMzQsLTcuNzMwNTMzIDIxLjY0NTI3LC0xMi4yMTgxMTcgMzQuOTYyODksLTEyLjE5OTIxOSAxMi43MTgwOCwwLjAxODc4IDIzLjg5Mjg5LDMuOTM5MTA3IDMzLjM3NSwxMS43MDg5ODQgNC4zMzAxMywzLjU0ODIyMSA0LjMzODI4LDMuNTUwMzkzIDYuMzI4MTMsMS41NjA1NDcgMS45ODk4OCwtMS45ODk4ODMgMS45ODYzMywtMS45OTU5NDIgLTIuMzM1OTQsLTUuNzI2NTYyIC01LjgwODQxLC01LjAxMzM5MyAtMTYuMzQ3NTIsLTEwLjIzMzE4IC0yNC41ODM5OCwtMTIuMTc1NzgyIC0zLjc0ODg2LC0wLjg4NDE3NCAtNy43NDU4OCwtMS4zMDk3MDYgLTExLjgzOTg1LC0xLjMxMDU0NiB6IG0gLTEuNTUyNzMsLTE1LjkwMjM0NCBjIC0xMC43MTM4MywwLjA0MDk4IC0yMS41MjcwNSwyLjMwNjg4NyAtMzEuNjYyMTEsNi45MDIzNDQgLTYuNjU3MjYsMy4wMTg1MTkgLTE3LjMxNjQ1LDEwLjE2OTY2NSAtMjAuNTkzNzUsMTMuODE0NDUzIC0xLjgxNDEsMi4wMTc1NDkgLTEuODIxNDcsMi4yMDk0MDYgLTAuMTYyMTEsNC4wNDI5NjggMS43MDM1OCwxLjg4MjQzMiAxLjg3OTQzLDEuODE0MTg4IDcuOTA0MywtMy4wNTY2NCAyNS44MTI4MSwtMjAuODY4Mzk3IDYzLjc4MjM0LC0yMS4wNTQwNTQgODguNjQ0NTMsLTAuNDMzNTk0IGwgNS40ODA0Nyw0LjU0Njg3NSAyLjAxOTUzLC0yLjA0Njg3NSAyLjAxNzU4LC0yLjA0ODgyOCAtNC41LC0zLjg3MzA0NyBDIDIxNC40NDk0NSwzNy4yODk5MDcgMTk2Ljg2ODExLDMxLjE3Nzc5NiAxNzkuMDExNzIsMzEuMjQ2MDk0IFoiIC8+CiAgPC9nPgo8L3N2Zz4K'><br><i>"
     "by Corey Harding<br>"
@@ -1088,6 +1049,7 @@ void setup() {
     "File System Info Calculated in Bytes<br>"
     "<b>Total:</b> ")+total+" <b>Free:</b> "+freespace+" "+" <b>Used:</b> "+used+F("<br>-----<br>"
     "<a href=\"/logs\">List Exfiltrated Data</a><br>-<br>"
+    "<a href=\"/cardbeep\">Beep and show when card is recorded</a><br>-<br>"
     "<a href=\"/experimental\">Experimental TX Mode</a><br>-<br>"
     "<a href=\"/data-convert\">Data Conversion Tools</a><br>-<br>"
     "<a href=\"/settings\">Configure Settings</a><br>-<br>"
@@ -1137,6 +1099,46 @@ void setup() {
     if (!deletelog.startsWith("/payloads/")) server.send(200, "text/html", String()+F("<a href=\"/\"><- BACK TO INDEX</a><br><br><a href=\"/logs\">List Exfiltrated Data</a><br><br>Deleting file: ")+deletelog);
     delay(50);
     SPIFFS.remove(deletelog);
+  });
+
+  server.on("/cardbeep", [](){
+    server.send(200, "text/html", String()+F(
+      "<html><head><title>Card Beeper</title></head>\n"
+      "<body><div id=\"cards\"></div>\n"
+      "<script>\n"
+      "function beep() {\nvar snd = new Audio(\"data:audio/wav;base64,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qJrx4KOQjahZxWbcZgztj2c49nKmkId44S71j0c8eV9yDK6uPRzx5X18eDvjvQ6yKo9ZSS6l//8elePK/Lf//IInrOF/FvDoADYAGBMGb7FtErm5MXMlmPAJQVgWta7Zx2go+8xJ0UiCb8LHHdftWyLJE0QIAIsI+UbXu67dZMjmgDGCGl1H+vpF4NSDckSIkk7Vd+sxEhBQMRU8j/12UIRhzSaUdQ+rQU5kGeFxm+hb1oh6pWWmv3uvmReDl0UnvtapVaIzo1jZbf/pD6ElLqSX+rUmOQNpJFa/r+sa4e/pBlAABoAAAAA3CUgShLdGIxsY7AUABPRrgCABdDuQ5GC7DqPQCgbbJUAoRSUj+NIEig0YfyWUho1VBBBA//uQZB4ABZx5zfMakeAAAAmwAAAAF5F3P0w9GtAAACfAAAAAwLhMDmAYWMgVEG1U0FIGCBgXBXAtfMH10000EEEEEECUBYln03TTTdNBDZopopYvrTTdNa325mImNg3TTPV9q3pmY0xoO6bv3r00y+IDGid/9aaaZTGMuj9mpu9Mpio1dXrr5HERTZSmqU36A3CumzN/9Robv/Xx4v9ijkSRSNLQhAWumap82WRSBUqXStV/YcS+XVLnSS+WLDroqArFkMEsAS+eWmrUzrO0oEmE40RlMZ5+ODIkAyKAGUwZ3mVKmcamcJnMW26MRPgUw6j+LkhyHGVGYjSUUKNpuJUQoOIAyDvEyG8S5yfK6dhZc0Tx1KI/gviKL6qvvFs1+bWtaz58uUNnryq6kt5RzOCkPWlVqVX2a/EEBUdU1KrXLf40GoiiFXK///qpoiDXrOgqDR38JB0bw7SoL+ZB9o1RCkQjQ2CBYZKd/+VJxZRRZlqSkKiws0WFxUyCwsKiMy7hUVFhIaCrNQsKkTIsLivwKKigsj8XYlwt/WKi2N4d//uQRCSAAjURNIHpMZBGYiaQPSYyAAABLAAAAAAAACWAAAAApUF/Mg+0aohSIRobBAsMlO//Kk4soosy1JSFRYWaLC4qZBYWFRGZdwqKiwkNBVmoWFSJkWFxX4FFRQWR+LsS4W/rFRb/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////VEFHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU291bmRib3kuZGUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMjAwNGh0dHA6Ly93d3cuc291bmRib3kuZGUAAAAAAAAAACU=\");\nsnd.play();\n}\n"
+      "var cards=-1;\n"
+      "function checkCards() {\n"
+        "var xhttp = new XMLHttpRequest();\n"
+        "xhttp.onreadystatechange = function() {\n"
+          "if (this.readyState == 4) {\n"
+            "try {\n"
+              "if(this.status == 200) {\n"
+                "if (this.responseText.indexOf(\"Log file not found\") > -1) {\n"
+                  "cards = 0;\n"
+                "}\n"
+                "else {\n"
+                  "var result = JSON.parse(this.responseText);\n"
+                  "if(cards != result[\"CaptureCount\"]) {\n"
+                    "if(cards != -1) {\n"
+                      "beep();\n"
+                      "var p = document.createElement(\"p\");\n"
+                      "p.innerHTML = JSON.stringify(result[\"Captures\"][result[\"CaptureCount\"] - 1]);\n"
+                      "document.getElementById(\"cards\").append(p);\n"
+                    "}\n"
+                    "cards = result[\"CaptureCount\"];\n"
+                  "}\n"
+                "}\n"
+              "}\n"
+            "} catch {}\n"
+            "window.setTimeout(checkCards, 500);\n"
+          "}\n"
+        "}\n"
+        "xhttp.open(\"GET\", \"/api/viewlog?logfile=log.txt\", true);\n"
+        "xhttp.send();\n"
+      "}\n"
+      "checkCards();\n"
+      "</script>\n</body>\n</html>\n"));
   });
 
   server.on("/format", [](){
@@ -1739,8 +1741,6 @@ void setup() {
       wg.clear();
       TXstatus=0;
       dos=0;
-
-      //experimentalStatus=String()+"Transmitting alternating bits: "+binALT;
       binALT="";
     }
 
@@ -1904,8 +1904,6 @@ void setup() {
   WiFiClient client;
   client.setNoDelay(1);
 
-//  Serial.println("Web Server Started");
-
   MDNS.begin("ESP");
 
   httpUpdater.setup(&httpServer, update_path, update_username, update_password);
@@ -1917,7 +1915,6 @@ void setup() {
     ftpSrv.begin(String(ftp_username),String(ftp_password));
   }
 
-//Start RFID Reader
   pinMode(LED_BUILTIN, OUTPUT);  // LED
   if (ledenabled==1){
     digitalWrite(LED_BUILTIN, LOW);
@@ -1927,9 +1924,6 @@ void setup() {
   }
 
 }
-//
-
-//Do It!
 
 ///////////////////////////////////////////////////////
 // LOOP function
@@ -1947,9 +1941,6 @@ void loop()
       ESP.restart();
     }
   }
-
-//Serial.print("Free heap-");
-//Serial.println(ESP.getFreeHeap(),DEC);
 
   if(wg.available()) {
     wg.pause();             // pause Wiegand pin interrupts

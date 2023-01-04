@@ -86,13 +86,13 @@ bool WiegandNG::available() {
   return ret;
 }
 
-void WiegandNG::ReadD0 () {
+ICACHE_RAM_ATTR void WiegandNG::ReadD0 () {
   _bitCounted++;                  // increment bit count for Interrupt connected to D0
   shift_left(_buffer,_bufferSize,1);        // shift 0 into buffer
   _lastPulseTime = millis();            // keep track of time last wiegand bit received
 }
 
-void WiegandNG::ReadD1() {
+ICACHE_RAM_ATTR void WiegandNG::ReadD1() {
   _bitCounted++;                  // increment bit count for Interrupt connected to D1
   if (_bitCounted > (_bufferSize * 8)) {
     _bitCounted=0;                // overflowed, 
